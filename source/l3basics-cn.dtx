@@ -1,0 +1,3361 @@
+% \iffalse meta-comment
+%
+%% File: l3basics-cn.dtx
+%
+% Copyright (C) 2023 by Yu Du <3531243657@qq.com>
+% 
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either
+% version 1.3c of this license or (at your option) any later
+% version. The latest version of this license is in:
+% 
+%   http://www.latex-project.org/lppl.txt
+% 
+% and version 1.3 or later is part of all distributions of
+% LaTeX version 2005/12/01 or later. 
+%
+%<*driver>
+\documentclass[full,kernel]{l3doc}
+\usepackage{ctex}
+\input{../set/codeset.tex}
+\ExplSyntaxOn
+\legacy_if_set_true:n{basics}
+\ExplSyntaxOff
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \ifbasics
+% \def\temp{宏包}
+% \else
+% \def\temp{模块}
+% \fi
+%
+% \title{^^A
+%   \pkg{l3basics}\temp ——\textbf{基本定义}^^A
+% }
+%
+% \author{^^A
+%  \LaTeX{}项目组【著】\thanks
+%    {^^A
+%      E-mail:
+%        \href{mailto:latex-team@latex-project.org}
+%          {latex-team@latex-project.org}^^A
+%    }\\
+%  dyu【译】\thanks{E-mail: 3531243657@qq.com}
+% }
+%
+% \date{分发于2023-11-09}
+%
+% \maketitle
+%
+% \begin{documentation}
+%
+%
+% 顾名思义，该\temp 提供了其他\temp 所需的一些基本定义。
+%
+% \section{无操作函数}
+%
+% \begin{function}[EXP]{\prg_do_nothing:}
+%   \begin{syntax}
+%     \cs{prg_do_nothing:}
+%     相当于\LaTeXe{}中的\tn{empty}
+%   \end{syntax}
+%   一个完全不做任何事情的可展开函数，展开后在输入流中不留下任何东西（展开结果为空），常用于条件判断语句。其定义为:
+%   \begin{latexsyntax}[rulecolor=\color{yellow},gobble=6]
+%     \cs_new:Npn \prg_do_nothing: { }
+%   \end{latexsyntax}
+% \end{function}
+%
+% \begin{function}{\scan_stop:}
+%   \begin{syntax}
+%     \cs{scan_stop:}
+%     \TeX 中与之对应的命令为：\tn{relax}
+%   \end{syntax}
+%   一个什么都不做的不可展开函数，不产生任何排版输出，只是告诉系统它前面的命令到此为止。其定义为：
+%   \begin{latexsyntax}[rulecolor=\color{yellow},gobble=6]
+%     \tex_let:D \scan_stop: \tex_relax:D 
+%   \end{latexsyntax}
+% \end{function}
+% 
+% \cs{prg_do_nothing:}（操作为空）和\cs{scan_stop:}（无操作）这两个函数是有区别的，具体区别可看下例：
+% \begin{latexexample}[gobble=4]
+%   \ExplSyntaxOn
+%     % (*\cs{prg_do_nothing:}*)展开为空，计数寄存器被赋值为12
+%     \tex_count:D 0 = 1 \prg_do_nothing: 2,
+%     \tex_the:D \tex_count:D 0;
+%
+%     % (*\cs{scan_stop:}*)不可展开，但起到定界作用，故计数寄存器被赋值为1
+%     \tex_count:D 0 = 1 \scan_stop: 2,
+%     \tex_the:D \tex_count:D 0.
+%   \ExplSyntaxOff
+%   % 以上代码的输出结果为：,12;2,1
+% \end{latexexample}
+%
+% \section{分组操作}
+% 
+% \begin{function}{\group_begin:, \group_end:}
+%   \begin{syntax}
+%     \cs{group_begin:}
+%     \TeX 中与之对应的命令为：\tn{begingroup}
+%     \vspace*{.5em}
+%     \cs{group_end:}
+%     \TeX 中与之对应的命令为：\tn{endgroup}
+%     \vspace*{.5em}
+%   \end{syntax}
+%   分别开启和关闭一个组，而且它们必须成对出现。
+% \end{function}
+% 
+% \begin{function}{\group_insert_after:N}
+%   \begin{syntax}
+%     \cs{group_insert_after:N} \meta{记号}
+%     \TeX{}中与之对应的命令为：\tn{aftergroup} \meta{记号}
+%   \end{syntax}
+%   此函数表示将\meta{记号}插入到当前组结束后（先将当前组的\meta{记号}保存，待当前组结束后再取出并执行）。若在一个组中有多个\cs{group_insert_after:N}函数，系统将会依次保存\meta{记号}，形成一个记号列表，待该组结束后再顺序执行所插入的\meta{记号}。另外需注意，\meta{记号}只能是一个命令或是一个单独的字符。举例说明如下：
+% \end{function}
+%
+% \begin{latexexample}[gobble=4]
+%   \ExplSyntaxOn
+%     \tl_const:Nn \c_mod_text_i_tl {闰馀成岁，律吕调阳。}
+%     \tl_const:Nn \c_mod_text_ii_tl {云腾致雨，露结为霜。}
+%     \group_begin:
+%       天地玄黄，宇宙洪荒。
+%       \group_insert_after:N \c_mod_text_i_tl
+%       日月盈昃，辰宿列账。
+%       \group_insert_after:N \c_mod_text_ii_tl
+%       寒来暑往，秋收冬藏。
+%     \group_end:
+%     金生丽水，玉出昆冈。
+%   \ExplSyntaxOff
+%   % 最终看到的输出顺序为：
+%     天地玄黄，宇宙洪荒。
+%     日月盈昃，辰宿列账。
+%     寒来暑往，秋收冬藏。
+%     闰馀成岁，律吕调阳。
+%     云腾致雨，露结为霜。
+%     金生丽水，玉出昆冈。
+% \end{latexexample}
+%
+% \begin{function}[added = 2021-05-11]{\group_show_list:, }
+%   \begin{syntax}
+%     \cs{group_show_list:}
+%   \end{syntax}
+%   在终端显示当前组的信息，包括：以什么样的方式开启组（是用\cs{group_begin:}函数开启还是用左花括号|{| 开启）；组开启时所在的行数（也就是\cs{group_begin:}或|{| 所在的行数）；组嵌套的层级。
+% \end{function}
+%
+% \begin{function}[added = 2021-05-11]{\group_log_list:}
+%   \begin{syntax}
+%     \cs{group_log_list:}
+%     \eTeX 中与之对应的命令为：\tn{showgroups}
+%   \end{syntax}
+%   在日志文件（\file{.log}）中显示当前组的信息，包括：以什么样的方式开启组（是用\cs{group_begin:}函数开启还是用左花括号“|{|” 开启）；组开启时所在的行数（也就是\cs{group_begin:}或“|{|” 所在的行数）；组嵌套的层级。
+\end{function}
+% 
+% 关于以上两个函数的使用方法，可参看如下示例：
+% \begin{latexexample}[gobble=4]
+%   % 使用如下代码：
+%   \group_begin:
+%     {
+%       \group_begin:
+%         \group_show_list:
+%       group_end:
+%       \group_log_list:
+%     }
+%   \group_end:
+% \end{latexexample}
+%
+% \begin{shell}[gobble=4]
+%   % 将会在终端显示：
+%   ### semi simple group (level 3) entered at line 3 (\begingroup)
+%   ### simple group (level 2) entered at line 2 ({)
+%   ### semi simple group (level 1) entered at line 1 (\begingroup)
+%   ### bottom level
+%   % 表示：\group_show_list: 所在组的层级为3，该组以\begingroup命令开启，且开启时其所在的行数为3；第2层级的组以{ 开启，且开启时其所在的行数为2；第1层级（最外层）的组以\begingroup命令开启，且开启时所在的行数为1。
+% \end{shell}
+%
+% \begin{latexexample}[gobble=4]
+%   % 将会在日志文件中显示：
+%     ### simple group (level 2) entered at line 2 ({)
+%     ### semi simple group (level 1) entered at line 1 (\begingroup)
+%     ### bottom level
+%   % 表示：\group_log_list:所在组的层级为2，该组以{ 开启，且开启时其所在的行数为3；第1层级的组以\begingroup命令开启，且开启时所在的行数为1。
+% \end{latexexample}
+%
+% \section{控制序列与函数}
+%
+% \subsection{创建函数}
+%
+% 在\LaTeX3中，创建函数\footnote{由于\TeX{} 是一门宏语言，故创建新函数意味着创建宏。}的工具自然也是函数，这类函数属于cs模块（控制序列：control sequences），此处姑且称其为定义类函数，根据在定义函数时\emph{是否做重复定义检查}以及\emph{如何设定作用域}可将其分为三类：
+% \begin{description}
+%   \item[new:]全局地创建一个函数，如果该函数已经定义，则会报错。
+%   \item[set:]局部地创建一个函数，如果该函数已经定义，则重新定义，不会报错。
+%   \item[gset:]全局地创建一个函数，如果该函数已经定义，则重新定义，不会报错。    
+% \end{description}
+% 用这三种方法（之一）创建函数时，还可控制所创建函数及其参数的行为：
+% \begin{description}
+%   \item[protected:]表示所创建的函数是受到保护的，在要被完全展开的环境（x-型或e-型展开）中不会被展开。
+%   \item[nopar:]表示所创建函数的参数不允许分段（参数中不能包含\verb|\par|记号）。  
+% \end{description}
+% 
+% 稍后可以看到，以上各单词或字母组合会出现在定义类函数的\meta{描述}部分（\textsf{new}，\textsf{set}，\textsf{gset}与\textsf{nopar}，\textsf{protected}进行可有可无的组合），明确其含义（各自具有不同功能）后便可轻松获知各种定义类函数的功能。
+%
+% 此外，由三种定义类函数（\textsf{new}、\textsf{set}、\textsf{gset}）所创建的函数叫做\emph{基础函数}（base functions），简称为“基函数”，其参数说明符只能为N、n、T、F、p、w或者是它们的组合。可以由基函数产生一些函数变体，后面宏展开部分将会讲到这种变体操作。
+%
+% {
+%   \kaishu 
+%   补充：在\pkg{expl3}最近的一次更新中(大概在2023-10-23前面一点时间)，三种定义类函数都增加了e变体，它们与原先的x变体在本质上并无差别(现在的x变体原样复制了e变体的定义)，比如\cs{cs_set:Npe}和\cs{cs_set:Npx}现在是这样定义的：
+%   \begin{latexsyntax}[gobble=6,rulecolor=\color{yellow}]
+%     \tex_protected:D \tex_long:D \tex_def:D \cs_set:Npe
+%       { \tex_long:D \tex_edef:D }
+%     \tex_let:D \cs_set:Npx \cs_set:Npe
+%   \end{latexsyntax}
+%   而原先只有\cs{cs_set:Npx}的定义：
+%   \begin{latexsyntax}[gobble=6,rulecolor=\color{yellow}]
+%     \tex_protected:D \tex_long:D \tex_def:D \cs_set:Npx
+%       { \tex_long:D \tex_edef:D }
+%   \end{latexsyntax}
+% }
+%
+% 下面以new类函数为例说明如何去创建一个函数：
+%
+% \subsubsection*{new类}
+%
+% \begin{function}
+%   {
+%     \cs_new:Npn, \cs_new:cpn, 
+%     \cs_new:Npe, \cs_new:cpe, 
+%     \cs_new:Npx, \cs_new:cpx
+%   }
+%   \begin{syntax}
+%     \cs{cs_new:Npn} \meta{函数} \meta{形参形式} \Arg{函数具体定义}
+%   \end{syntax}
+%   表示全局地创建一个函数，该函数在要被完全展开的环境（x-型或e-型展开）中可以被展开，而且该函数的参数中允许分段，如果该函数已经定义则会报错。
+%
+%   其中，\meta{函数}由“|\|”后接需要定义的函数名构成（遵循前面所说的命名约定），\meta{函数具体定义}的含义不言而喻；\meta{形参形式}则是指形参（可理解为实参的占位符，在\TeX{}中，形参用\verb|#|和数字1$\sim$9的组合表示）组成的形式，通常的形式为\verb|#1#2#3...|（最多有9个），除此之外也可以采用一些不同寻常的形式来构造特殊的函数语法，举例如下：
+% \end{function}
+% \begin{latexexample}[gobble=4]
+%   % 形参组成的形式为：#1#2
+%   \cs_new:Npn \mymod_testi:nn #1#2 { #1 喜欢 #2 ！}
+%   % 使用函数
+%   \mymod_testi:nn{我}{你}
+% 
+%   % 形参组成的形式为：(#1|#2)
+%   \cs_new:Npn \mymod_testii:w (#1|#2) { #1 喜欢 #2 ！}
+%   % 使用函数
+%   \mymod_testii:w(我|你)
+% 
+%   % 以上两段代码都可以得到：我喜欢你！
+% \end{latexexample}
+%   
+% 另外，也可以省略\meta{形参形式}部分，这时\meta{参数说明} 中的p自然也要对应去掉，此种情形下形参组成的形式默认为：|#1#2#3...|，而形参的数量则会从所要定义函数的\meta{参数说明}中被系统自动检测。于是，不带\meta{形参形式}的定义类函数可写为：
+% \begin{function}
+%   {
+%     \cs_new:Nn, \cs_new:cn, 
+%     \cs_new:Ne, \cs_new:ce
+%   }
+%   \begin{syntax}
+%     \cs{cs_new:Nn} \meta{函数} \marg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{全局创建}+\fbox{做重复定义检查}+\fbox{形参数量会被自动检测}
+%   \end{syntax}
+% \end{function}
+%
+% 还有，在使用new类创建函数时，如果参数中不允许分段，则使用如下定义类函数：
+% \begin{function}
+%   {
+%     \cs_new_nopar:Npn, \cs_new_nopar:cpn, 
+%     \cs_new_nopar:Npe, \cs_new_nopar:cpe, 
+%     \cs_new_nopar:Npx, \cs_new_nopar:cpx, 
+%     \cs_new_nopar:Nn , \cs_new_nopar:cn , 
+%     \cs_new_nopar:Ne , \cs_new_nopar:ce
+%   }
+%   \begin{syntax}
+%     \cs{cs_new_nopar:Npn} \meta{函数} \meta{形参形式} \marg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{全局创建}+\fbox{做重复定义检查}+\fbox{参数中不允许分段}
+%     \vspace*{1em}
+%     \cs{cs_new_nopar:Nn} \meta{函数} \marg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{以上所有}+\fbox{形参数量会被自动检测}
+%   \end{syntax}
+% \end{function}
+% 
+% 如果想让所创建的函数在要被完全展开的环境（x-型或e-型展开）中不会被展开，则使用：
+%
+% \begin{function}
+%   {
+%     \cs_new_protected:Npn, \cs_new_protected:cpn, 
+%     \cs_new_protected:Npe, \cs_new_protected:cpe, 
+%     \cs_new_protected:Npx, \cs_new_protected:cpx, 
+%     \cs_new_protected:Nn , \cs_new_protected:cn , 
+%     \cs_new_protected:Ne , \cs_new_protected:ce 
+%   }
+%   \begin{syntax}
+%     \cs{cs_new_protected:Npn} \meta{函数} \meta{形参形式} \marg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{全局创建}+\fbox{做重复定义检查}+\fbox{所创建函数受到保护}
+%     \vspace*{1em}
+%     \cs{cs_new_protected:Npn} \meta{函数} \marg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{以上所有}+\fbox{形参数量会被自动检测}
+%   \end{syntax}
+% \end{function}
+%
+% 如果既不想让所创建的函数在要被完全展开的环境（x-型或e-型展开）中被展开，也不允许所创建函数的参数中有分段，则使用：
+% 
+% \begin{function}
+%   {
+%     \cs_new_protected_nopar:Npn, \cs_new_protected_nopar:cpn, 
+%     \cs_new_protected_nopar:Npe, \cs_new_protected_nopar:cpe, 
+%     \cs_new_protected_nopar:Npx, \cs_new_protected_nopar:cpx, 
+%     \cs_new_protected_nopar:Nn , \cs_new_protected_nopar:cn , 
+%     \cs_new_protected_nopar:Ne , \cs_new_protected_nopar:ce 
+%   }
+%   \begin{syntax}
+%     \cs{cs_new_protected_nopar:Npn} \meta{函数} \meta{形参形式} \marg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{全局创建}+\fbox{做重复定义检查}+\fbox{所创建函数受到保护}+\fbox{参数中不允许分段}
+%     \vspace*{1em}
+%     \cs{cs_new_protected_nopar:Nn} \meta{函数} \marg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{以上所有}+\fbox{形参数量会被自动检测}
+%   \end{syntax}
+% \end{function}
+%
+% 明确了以上new类各函数的含义后，其余两类定义类函数的含义自然是显而易见的，此处不再赘述，只给出具体函数：
+% 
+% \subsubsection*{set类}
+%
+% \begin{function}
+%   {
+%     \cs_set:Npn, \cs_set:cpn, 
+%     \cs_set:Npe, \cs_set:cpe, 
+%     \cs_set:Npx, \cs_set:cpx, 
+%     \cs_set:Nn , \cs_set:cn , 
+%     \cs_set:Ne , \cs_set:ce
+%     }
+%   \begin{syntax}
+%     \cs{cs_set:Npn} \meta{函数} \meta{形参形式} \marg{函数具体定义}
+%     \TeX{}中与之对应的命令为：\tn{long}\tn{def} \meta{函数} \meta{形参形式} \Arg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{局部创建}+\fbox{不做重复定义检查}
+%     \vspace*{1em}
+%     \cs{cs_set:Nn} \meta{函数} \marg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{以上所有}+\fbox{形参数量会被自动检测}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}
+%   {
+%     \cs_set_nopar:Npn, \cs_set_nopar:cpn, 
+%     \cs_set_nopar:Npe, \cs_set_nopar:cpe, 
+%     \cs_set_nopar:Npx, \cs_set_nopar:cpx, 
+%     \cs_set_nopar:Nn , \cs_set_nopar:cn , 
+%     \cs_set_nopar:Ne , \cs_set_nopar:ce
+%   }
+%   \begin{syntax}
+%     \cs{cs_set_nopar:Npn} \meta{函数} \meta{形参形式} \marg{函数具体定义}
+%     \TeX{}中与之对应的命令为：\tn{def} \meta{函数} \meta{形参形式} \Arg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{局部创建}+\fbox{不做重复定义检查}+\fbox{参数中不允许分段}
+%     \vspace*{1em}
+%     \cs{cs_set_nopar:Nn} \meta{函数} \marg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{以上所有}+\fbox{形参数量会被自动检测}
+%   \end{syntax}
+% \end{function}
+% 
+% \begin{function}
+%   {
+%     \cs_set_protected:Npn, \cs_set_protected:cpn, 
+%     \cs_set_protected:Npe, \cs_set_protected:cpe, 
+%     \cs_set_protected:Npx, \cs_set_protected:cpx, 
+%     \cs_set_protected:Nn , \cs_set_protected:cn , 
+%     \cs_set_protected:Ne , \cs_set_protected:ce
+%   }
+%   \begin{syntax}
+%     \cs{cs_set_protected:Npn} \meta{函数} \meta{形参形式} \marg{函数具体定义}
+%     \TeX{}中与之对应的命令为：\tn{protected}\tn{long}\tn{def}\meta{函数}\meta{形参形式}\Arg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{局部创建}+\fbox{不做重复定义检查}+\fbox{所创建函数受到保护}
+%     \vspace*{1em}
+%     \cs{cs_set_protected:Nn} \meta{函数} \marg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{以上所有}+\fbox{形参数量会被自动检测}
+%   \end{syntax}
+% \end{function}
+%
+% \begin{function}
+%   {
+%     \cs_set_protected_nopar:Npn, \cs_set_protected_nopar:cpn, 
+%     \cs_set_protected_nopar:Npe, \cs_set_protected_nopar:cpe, 
+%     \cs_set_protected_nopar:Npx, \cs_set_protected_nopar:cpx, 
+%     \cs_set_protected_nopar:Nn , \cs_set_protected_nopar:cn , 
+%     \cs_set_protected_nopar:Ne , \cs_set_protected_nopar:ce
+%   }
+%   \begin{syntax}
+%     \cs{cs_set_protected_nopar:Npn} \meta{函数} \meta{形参形式} \marg{函数具体定义}
+%     \TeX{}中与之对应的命令为：\tn{protected}\tn{def}\meta{函数}\meta{形参形式}\Arg{函数具体定义}
+%     \vspace*{0.5em}
+%     性质：\fbox{局部创建}+\fbox{不做重复定义检查}+\fbox{所创建函数受保护}+\fbox{参数中不允许分段}
+%     \vspace*{1em}
+%     \cs{cs_set_protected_nopar:Nn} \meta{函数} \marg{函数具体定义}
+%     \vspace*{0.5em}
+%     性质：\fbox{以上所有}+\fbox{形参数量会被自动检测}
+%   \end{syntax}
+% \end{function}
+%
+% \subsubsection*{gset类}
+%
+% \begin{function}
+%   {
+%     \cs_gset:Npn, \cs_gset:cpn, 
+%     \cs_gset:Npe, \cs_gset:cpe, 
+%     \cs_gset:Npx, \cs_gset:cpx, 
+%     \cs_gset:Nn , \cs_gset:cn , 
+%     \cs_gset:Ne , \cs_gset:ce
+%   }
+%   \begin{syntax}
+%     \cs{cs_gset:Npn} \meta{函数} \meta{形参形式} \marg{函数具体定义}
+%     \TeX{}中与之对应的命令为：\tn{long}\tn{gdef} \meta{函数} \meta{形参形式} \Arg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{全局创建}+\fbox{不做重复定义检查}
+%     \vspace*{1em}
+%     \cs{cs_gset:Nn} \meta{函数} \marg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{以上所有}+\fbox{形参数量会被自动检测}
+%   \end{syntax}
+% \end{function}
+%
+%\begin{function}
+%  {
+%    \cs_gset_nopar:Npn, \cs_gset_nopar:cpn, 
+%    \cs_gset_nopar:Npe, \cs_gset_nopar:cpe, 
+%    \cs_gset_nopar:Npx, \cs_gset_nopar:cpx, 
+%    \cs_gset_nopar:Nn , \cs_gset_nopar:cn , 
+%    \cs_gset_nopar:Ne , \cs_gset_nopar:ce
+%  }
+%  \begin{syntax}
+%    \cs{cs_gset_nopar:Npn} \meta{函数} \meta{形参形式} \marg{函数具体定义}
+%    \TeX{}中与之对应的命令为：\tn{gdef} \meta{函数} \meta{形参形式} \Arg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{全局创建}+\fbox{不做重复定义检查}+\fbox{参数中不允许分段}
+%     \vspace*{1em}
+%     \cs{cs_gset_nopar:Nn} \meta{函数} \marg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{以上所有}+\fbox{形参数量会被自动检测}
+%   \end{syntax}
+% \end{function}
+% 
+% \begin{function}
+%   {
+%     \cs_gset_protected:Npn, \cs_gset_protected:cpn, 
+%     \cs_gset_protected:Npe, \cs_gset_protected:cpe, 
+%     \cs_gset_protected:Npx, \cs_gset_protected:cpx, 
+%     \cs_gset_protected:Nn , \cs_gset_protected:cn , 
+%     \cs_gset_protected:Ne , \cs_gset_protected:ce
+%   }
+%   \begin{syntax}
+%     \cs{cs_gset_protected:Npn} \meta{函数} \meta{形参形式} \marg{函数具体定义}
+%     \TeX{}中与之对应的命令为：\tn{protected}\tn{long}\tn{gdef}\meta{函数}\meta{形参形式}\Arg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{全局创建}+\fbox{不做重复定义检查}+\fbox{所创建函数受到保护}
+%     \vspace*{1em}
+%     \cs{cs_gset_protected:Nn} \meta{函数} \marg{函数具体定义}
+%     \vspace*{.5em}
+%     性质：\fbox{以上所有}+\fbox{形参数量会被自动检测}
+%   \end{syntax}
+% \end{function}
+% 
+% \begin{function}
+%   {
+%     \cs_gset_protected_nopar:Npn, \cs_gset_protected_nopar:cpn, 
+%     \cs_gset_protected_nopar:Npe, \cs_gset_protected_nopar:cpe, 
+%     \cs_gset_protected_nopar:Npx, \cs_gset_protected_nopar:cpx, 
+%     \cs_gset_protected_nopar:Nn , \cs_gset_protected_nopar:cn , 
+%     \cs_gset_protected_nopar:Ne , \cs_gset_protected_nopar:ce
+%   }
+%   \begin{syntax}
+%     \cs{cs_gset_protected_nopar:Npn} \meta{函数} \meta{形参形式} \marg{函数具体定义}
+%     \TeX{}中与之对应的命令为：\tn{protected}\tn{gdef}\meta{函数}\meta{形参形式}\Arg{函数具体定义}
+%     \vspace*{0.5em}
+%     性质：\fbox{全局创建}+\fbox{不做重复定义检查}+\fbox{所创建函数受保护}+\fbox{参数中不允许分段}
+%     \vspace*{1em}
+%     \cs{cs_gset_protected_nopar:Nn} \meta{函数} \marg{函数具体定义}
+%     \vspace*{0.5em}
+%     性质：\fbox{以上所有}+\fbox{形参数量会被自动检测}
+%   \end{syntax}
+% \end{function}
+% 
+% 除以上定义类函数外，还有一个函数可用于定义函数：
+% \begin{function}[updated = 2012-01-14]
+%   {
+%     \cs_generate_from_arg_count:NNnn, \cs_generate_from_arg_count:NNno, 
+%     \cs_generate_from_arg_count:cNnn, \cs_generate_from_arg_count:Ncnn
+%   }
+%   \begin{syntax}
+%     \cs{cs_generate_from_arg_count:NNnn} \meta{函数} \meta{参数说明为Npn的定义类函数} \Arg{参数个数} \Arg{函数的具体定义}
+%   \end{syntax}
+%   表示用参数说明为Npn的定义类函数（如：\verb|\cs_new:Npn|）定义一个具有指定参数个数的新函数，其意义可参看:\url{https://ask.latexstudio.net/ask/question/8058.html}
+% \end{function}
+%
+% \subsection{复制控制序列定义}
+%
+% \subsubsection*{new类}
+% 
+% \begin{function}
+%   {
+%     \cs_new_eq:NN, \cs_new_eq:Nc, 
+%     \cs_new_eq:cN, \cs_new_eq:cc
+%   }
+%   \begin{syntax}
+%     \cs{cs_new_eq:NN} \meta{{控制序列}_1} \meta{{控制序列}_2}
+%     \cs{cs_new_eq:NN} \meta{{控制序列}_1} \meta{记号}
+%   \end{syntax}
+%   此函数表示全局地创建\meta{{控制序列}_1}（{\kaishu 注：\meta{{控制序列}_1}事先不能已有定义，否则会报错}），并让它的定义等于\meta{{控制序列}_2}（或\meta{记号}）当前的定义。若\meta{{控制序列}_2}（或\meta{记号}）之后被重新定义，\meta{{控制序列}_1}的定义仍保持不变（\meta{{控制序列}_1}相当于是\meta{{控制序列}_2}或\meta{记号}的副本）。
+% \end{function}
+% 
+% \subsubsection*{set类}
+% 
+% \begin{function}
+%   {
+%     \cs_set_eq:NN, \cs_set_eq:Nc, 
+%     \cs_set_eq:cN, \cs_set_eq:cc
+%   }
+%   \begin{syntax}
+%     \cs{cs_set_eq:NN} \meta{{控制序列}_1} \meta{{控制序列}_2}
+%     \cs{cs_set_eq:NN} \meta{{控制序列}_1} \meta{记号}
+%     \TeX{}中与之对应的命令为：\tn{let} \meta{{控制序列}_1}=\meta{{控制序列}_2}(或\meta{记号})（等号=可以省略）
+%   \end{syntax}
+%   此函数表示在局部范围内让\meta{{控制序列}_1}的定义等于\meta{{控制序列}_2}（或\meta{记号}）当前的定义。若\meta{{控制序列}_1}事先没有定义，则局部地创建\meta{{控制序列}_1}，并将\meta{{控制序列}_2}（或\meta{记号}）当前的定义赋予它；若\meta{{控制序列}_1}事先已有定义，则局部地将其定义更改为\meta{{控制序列}_2}（或\meta{记号}）当前的定义。后续若更改\meta{{控制序列}_2}（或\meta{记号}）的定义，\meta{{控制序列}_1}的定义保持不变（\meta{{控制序列}_1}相当于是\meta{{控制序列}_2}或\meta{记号}的副本）。
+% \end{function}
+% 
+% \subsubsection*{gset类}
+% 
+% \begin{function}
+%   {
+%     \cs_gset_eq:NN,\cs_gset_eq:cN, 
+%     \cs_gset_eq:Nc, \cs_gset_eq:cc
+%   }
+%   \begin{syntax}
+%     \cs{cs_gset_eq:NN} \meta{{控制序列}_1} \meta{{控制序列}_2}
+%     \cs{cs_gset_eq:NN} \meta{{控制序列}_1} \meta{记号}
+%     \TeX{}中与之对应的命令为：\tn{global}\tn{let} \meta{{控制序列}_1}=\meta{{控制序列}_2}(或\meta{记号}) （等号=可以省略）
+%   \end{syntax}
+%   此函数表示在全局范围内让\meta{{控制序列}_1}的定义等于\meta{{控制序列}_2}（或\meta{记号}）当前的定义。若\meta{{控制序列}_1}事先没有定义，则全局地创建\meta{{控制序列}_1}，并将\meta{{控制序列}_2}（或\meta{记号}）当前的定义赋予它；若\meta{{控制序列}_1}事先已有定义，则全局地将其定义更改为\meta{{控制序列}_2}（或\meta{记号}）当前的定义。后续若更改\meta{{控制序列}_2}（或\meta{记号}）的定义，\meta{{控制序列}_1}的定义保持不变（\meta{{控制序列}_1}相当于是\meta{{控制序列}_2}或\meta{记号}的副本）。
+% \end{function}
+%
+% \subsection{删除控制序列定义}
+% 
+% \begin{function}[updated = 2011-09-15]{\cs_undefine:N, \cs_undefine:c}
+%   \begin{syntax}
+%       \cs{cs_undefine:N} \meta{控制序列}
+%   \end{syntax}
+%   此函数表示将\meta{控制序列}的定义全局删除。
+% \end{function}
+% 
+% \subsection{显示控制序列定义}
+%
+% 系统中的控制序列可分为\emph{基本控制序列}（原语）和\emph{扩展控制序列}两类，基本控制序列是指不能再分解（展开）的底层控制序列（比如：\tn{def}、\tn{let}、\tn{meaning}...），扩展控制序列则是指由基本控制序列构造出的控制序列。\LaTeX3 定义了三种显示控制序列定义的函数，它们都只会显示扩展控制序列的定义，如果是基本控制序列则只显示控制序列名。下面是三个函数的具体定义：
+% 
+% \begin{function}[EXP, updated = 2011-12-22]{\cs_meaning:N, \cs_meaning:c}
+%   \begin{syntax}
+%     \cs{cs_meaning:N} \meta{控制序列}
+%     \TeX{}中与之对应的命令为：\tn{meaning} \meta{控制序列}
+%   \end{syntax}
+%   显示系统中扩展控制序列的定义（可在\file{.pdf}文件中显示，若是基本控制序列则只显示控制序列名）。
+% 
+%   \cs{cs_meaning:N}原样复制了原语\tn{meaning}的定义，因此它也是一个基本控制序列，于是在使用\cs{cs_meaning:N}来显示其自身定义时只会显示与之对应的\TeX{}基本控制序列名称。此外，还有一个函数\cs{token_to_meaning:N}的定义也是原语\tn{meaning}的原样复制，用来显示不是控制序列的记号的定义（将\tn{meaning}赋予两个不同的名称是为了在语法上更合乎逻辑）。举例说明如下：
+%   \begin{latexexample}[gobble=5]
+%     \cs_meaning:N \def
+%     % 显示为：\def（不显示其定义，表示这是系统的原语。）
+%     \cs_meaning:N \cs_meaning:N
+%     % 显示为：\meaning
+%     %（表示\cs_meaning:N 原样复制了(*\TeX{}*)基本命令\meaning 的定义。）
+%     \cs_meaning:N \cs_set:Npn
+%   将会显示为：\protected\long macro:->\tex_long:D \tex_def:D
+%   \end{latexexample}
+% \end{function}
+%
+% \begin{function}[updated = 2017-02-14]{\cs_show:N, \cs_show:c}
+%   \begin{syntax}
+%     \cs{cs_show:N} \meta{控制序列}
+%   \end{syntax}
+%   暂停编译，并在终端显示扩展控制序列的定义（基本控制序列则只显示控制序列名）。
+% \end{function}
+% 
+% \begin{function}[added = 2014-08-22, updated = 2017-02-14]{\cs_log:N, \cs_log:c}
+%     \begin{syntax}
+%         \cs{cs_log:N} \meta{控制序列}
+%     \end{syntax}
+%     在日志（\file{.log}）文件中显示扩展控制序列的定义（基本控制序列则只显示控制序列名）。
+% \end{function}
+%
+%
+% \subsection{控制序列和字符串之间的转化}
+% 
+% \subsubsection*{将字符串转化为控制序列}
+% 
+% \begin{function}[EXP]{\use:c}
+%   \begin{syntax}
+%     \cs{use:c} \Arg{控制序列名} 
+%   \end{syntax}
+% \end{function}
+% 
+% \begin{function}[EXP]{\cs:w, \cs_end:}
+%   \begin{syntax}
+%     \cs{cs:w} \meta{控制序列名} \cs{cs_end:}
+%     \TeX{}中与之对应的命令为：\tn{csname} \meta{控制序列名} \tn{endcsname} 
+%     这里改用了\LaTeX3语法来书写而已。
+%   \end{syntax}
+% \end{function}
+% 
+% 以上两个函数的作用都是将\meta{控制序列名}转化成名为\meta{控制序列名}的控制序列，\meta{控制序列名}中可含有字符和控制序列，但所含控制序列会被完全展开，且展开后的内容只能包含字符（分别是类别码为10的空格字符、为11的英文字符以及为12的其他字符），如果展开后的内容中还有控制序列（比如受保护的控制序列就不会被展开），则系统会报错。另外，如果所创建的控制序列事先未被定义，则这两个函数作用为空。举例如下：
+% \begin{latexexample}[gobble=4]
+%   \tl_new:N \l_mymod_test_tl %声明变量
+%   \tl_set:Nn \l_mymod_test_tl {bc} %为变量赋值
+%   % 使用
+%   \use:c{ a \tl_use:N\l_mymod_test_tl d }
+%   % 或
+%   \cs:w   a \tl_use:N\l_mymod_test_tl d   \cs_end:
+%   %都可以得到：\abcd
+%   % 实际上，这里事先未定义\abcd，使用如下函数查看其定义：
+%   \cs_meaning:N \abcd
+%   % 将会得到：\relax，表示啥也不做
+% \end{latexexample} 
+%
+% \subsubsection*{将控制序列转化为字符串}
+%
+% \begin{function}[EXP]{\cs_to_str:N}
+%   \begin{syntax}
+%     \cs{cs_to_str:N} \meta{控制序列}
+%   \end{syntax}
+%   此函数表示将给定控制序列的名称（而非控制序列内容）转化为字符串（类代码为12），空格除外（类代码为10），且字符串中不包含转义字符“|\|”（使用\cs{token_to_str:N}进行同样的操作则会包含转义字符“|\|”）。举例如下：
+% \end{function}
+%
+% \begin{latexexample}[gobble=4]
+%   % 使用如下函数：
+%   \cs_to_str:N \cs_set_protected: N p n
+%   % 将会得到：cs_set_protected:Npn（类代码为12的字符串，其间无空格）
+%   % 然而，使用：
+%   \token_to_str:N \cs_set_protected: N p n
+%   % 将会得到：
+%   % \cs_set_protected:Npn（类代码为12的字符串，其间无空格，且包含转义字符\）
+% \end{latexexample}
+%
+% \section{解析控制序列}
+% 
+% \subsection*{解析函数名}
+% \begin{function}[EXP, added = 2018-04-06]{\cs_split_function:N}
+%   \begin{syntax}
+%     \cs{cs_split_function:N} \meta{函数}
+%   \end{syntax} 
+%   此函数表示以冒号（|:|）为界线将函数名划分为\meta{模块}|_|\meta{描述}和\meta{参数说明}两部分并显示（也就是显示除去|\|和|:|的函数名），在输入流中包含三部分信息：一个指示是否找到冒号的逻辑标记（用以区分变量和函数）、\meta{模块}|_|\meta{描述}（类代码为12）和\meta{参数说明}（类代码为12）。举例如下：
+%   \begin{latexexample}[gobble=6]
+%     \cs_split_function:N \cs_new:Nn
+%     %将会（在.pdf文件中）显示：cs_newNn，也就是除去\和:的函数名
+%   \end{latexexample}
+% \end{function}
+%
+% \subsection*{宏解析}
+%
+% 接下来的三个函数用来解析宏信息，如果函数后所跟的\meta{记号}不是一个宏，则在输入流中插入\cs{scan_stop:}，表示啥也不做。
+%     
+% \begin{function}[EXP, added = 2019-02-27]{\cs_prefix_spec:N}
+%   \begin{syntax}
+%     \cs{cs_prefix_spec:N} \meta{记号}
+%   \end{syntax}
+%   此函数用于以字符串形式（类代码为12）显示一个宏在用定义类函数定义时对应于\TeX{}中用定义类命令（如\tn{def}）定义时加在其前的前缀（如果此函数后面的宏直接就是用\TeX{}中定义类命令之前加前缀定义的，同样会显示前缀），可显示的前缀包括：\tn{long}、\tn{protected}、\tn{protected}\tn{long}。举例如下：
+%   \begin{latexexample}[gobble=6]
+%     \cs_set_protected:Npn \mymod_test:nn #1#2 {#1 爱 #2}
+%     \cs_prefix_spec:N \mymod_test:nn
+%     % 将会（在.pdf文件中）显示：\protected\long 
+%           
+%     % 如果函数是用\def前加前缀定义的，如：
+%     \long\protected\def\modtest #1#2 {#1 爱 #2}
+%     \cs_prefix_spec:N \modtest
+%     % 同样会显示前缀：\protected\long
+%   \end{latexexample}
+% \end{function}
+% 
+% \begin{function}[EXP, added = 2022-06-24]{\cs_parameter_spec:N}
+%   \begin{syntax}
+%     \cs{cs_parameter_spec:N} \meta{记号} 
+%   \end{syntax}
+%   此函数用于以字符串形式（类代码为12）显示一个宏的形参（|#1#2#3|）。举例如下：
+%   \begin{latexexample}[gobble=6]
+%     \cs_set:Npn \mymod_test:nn #1#2 {#1 爱 #2}
+%     \cs_parameter_spec:N \mymod_test:nn
+%     % 将会（在.pdf文件中）显示：#1#2 
+%   \end{latexexample}
+% \end{function}
+%
+% \begin{function}[EXP, added = 2019-02-27]{\cs_replacement_spec:N, \cs_replacement_spec:c}
+%   \begin{syntax}
+%     \cs{cs_replacement_spec:N} \meta{记号}
+%   \end{syntax}
+%   此函数用于以字符串形式（类代码为12）显示一个宏的具体定义（称之为替换文本：replacement text），用|~|表示的空格（类代码为10）也会显示（不过应当注意，多个连续空格表示一个）。举例如下：
+%   \begin{latexexample}[gobble=6,showspaces=true]
+%     \cs_set:Npn \mymod_test:nn #1#2 {x #1~~~y #2}
+%     \cs_replacement_spec:N \mymod_test:nn
+%     % 将会（在.pdf文件中）显示：x#1 y#2    
+%   \end{latexexample}
+% \end{function}
+%
+% \section{参数的使用或移除}
+%
+% 函数所接收的参数既可以被读取后使用，也可以被读取后移除，这些操作可以使用如下函数来完成：
+%
+% \begin{function}[EXP]{\use:n, \use:nn, \use:nnn, \use:nnnn}
+%   \begin{syntax}
+%     \cs{use:n} \Arg{{参数}_1} 
+%     相当于\LaTeXe{}中的\tn{@firstofone}\Arg{{参数}_1}（\tn{long}\tn{def}\tn{@firstofone}|#1{#1}|）
+%     \vspace*{.5em}
+%     \cs{use:nn} \Arg{{参数}_1} \Arg{{参数}_2}
+%     \cs{use:nnn} \Arg{{参数}_1} \Arg{{参数}_2} \Arg{{参数}_3} 
+%     \cs{use:nnnn} \Arg{{参数}_1} \Arg{{参数}_2} \Arg{{参数}_3} \Arg{{参数}_4}
+%   \end{syntax}
+%   分别接收$1\sim 4$个参数，并原样使用所接收的参数。
+%   举例说明如下：
+%   \begin{latexexample}[gobble=6]
+%     % 使用：
+%     \use:nnn {abc} { {def} } { { {ghi} } }
+%     % 将会在输入流中留下： abc {def} { {ghi} }
+%     % 注意在pdf文档里看到的是：abcdefghi，这是因为{ }不会在pdf里面显示。
+%   \end{latexexample}
+% \end{function}
+
+% \begin{function}[EXP]{\use_i:nn, \use_ii:nn}
+%   \begin{syntax}
+%     \cs{use_i:nn} \Arg{{参数}_1} \Arg{{参数}_2} 
+%     相当于\LaTeXe{}中的：\tn{@firstoftwo}\Arg{{参数}_1}\Arg{{参数}_2} （\tn{long}\tn{def}\tn{@firstoftwo}|#1#2{#1}|）
+%     \vspace*{.5em}
+%     \cs{use_ii:nn} \Arg{{参数}_1} \Arg{{参数}_2}
+%     相当于\LaTeXe{}中的：\tn{@secondoftwo}\Arg{{参数}_1}\Arg{{参数}_2} （\tn{long}\tn{def}\tn{@secondoftwo}|#1#2{#2}|）
+%   \end{syntax}
+%   这两个函数都接收两个参数，其中，\cs{use_i:nn}会舍弃\meta{{参数}_2}而使用\meta{{参数}_1}，\cs{use_ii:nn}会舍弃\meta{{参数}_1}而使用\meta{{参数}_2}。
+% \end{function}
+%
+% \begin{function}[EXP]{\use_i:nnn, \use_ii:nnn, \use_iii:nnn}
+%   \begin{syntax}
+%     \cs{use_i:nnn} \Arg{{参数}_1} \Arg{{参数}_2} \Arg{{参数}_3} 
+%     \cs{use_ii:nnn} \Arg{{参数}_1} \Arg{{参数}_2} \Arg{{参数}_3} 
+%     \cs{use_iii:nnn} \Arg{{参数}_1} \Arg{{参数}_2} \Arg{{参数}_3} 
+%     相当于\LaTeXe{}中的：\tn{@thirdofthree}\Arg{{参数}_1}\Arg{{参数}_2} \Arg{{参数}_3} （\tn{long}\tn{def}\tn{@thirdofthree}|#1#2#3{#3}|）
+%   \end{syntax}
+%   以上三个函数都接收3个参数，其中，\cs{use_i:nnn}只使用\meta{{参数}_1}；\cs{use_ii:nnn}只使用\meta{{参数}_2}，\cs{use_iii:nnn}只使用\meta{{参数}_3}。
+% \end{function}
+
+% \begin{function}[EXP]{\use_i_ii:nnn}
+%   \begin{syntax}
+%     \cs{use_i_ii:nnn} \Arg{{参数}_1} \Arg{{参数}_2} \Arg{{参数}_3}
+%   \end{syntax}
+%   此函数接收3个参数，但只使用\meta{{参数}_1}和\meta{{参数}_2}。举例说明如下：
+%   \begin{latexexample}[gobble=6]
+%     % 使用：
+%     \use_i_ii:nnn {abc} { {def} } { { {ghi} } }
+%     % 将会在输入流中留下： abc {def} 
+%     % 注意在pdf文档里看到的是：abcdef，这是因为{ }不会在pdf里面显示。
+%   \end{latexexample}
+% \end{function}
+%
+% \begin{function}[EXP]{\use_i:nnnn, \use_ii:nnnn, \use_iii:nnnn, \use_iv:nnnn}
+%   \begin{syntax}
+%     \cs{use_i:nnnn} \Arg{{参数}_1} \Arg{{参数}_2} \Arg{{参数}_3} \Arg{{参数}_4} 
+%     \cs{use_ii:nnnn} \Arg{{参数}_1} \Arg{{参数}_2} \Arg{{参数}_3} \Arg{{参数}_4} 
+%     \cs{use_iii:nnnn} \Arg{{参数}_1} \Arg{{参数}_2} \Arg{{参数}_3} \Arg{{参数}_4} 
+%     \cs{use_iv:nnnn} \Arg{{参数}_1} \Arg{{参数}_2} \Arg{{参数}_3} \Arg{{参数}_4} 
+%   \end{syntax}
+%   以上四个函数都接收4个参数，其中，\cs{use_i:nnnn}只使用\meta{{参数}_1}；\cs{use_ii:nnnn}只使用
+%   \meta{{参数}_2}，\cs{use_iii:nnnn}只使用\meta{{参数}_3}；\cs{use_iv:nnnn}只使用\meta{{参数}_4}。
+% \end{function}
+%
+% \begin{function}[EXP]{\use_i:nnnnn, \use_ii:nnnnn, \use_iii:nnnnn, \use_iv:nnnnn, \use_v:nnnnn}
+%   \begin{syntax}
+%     \cs{use_i:nnnnn} \Arg{{参数}_1} \Arg{{参数}_2} \Arg{{参数}_3} \Arg{{参数}_4} \Arg{{参数}_5}
+%     ...
+%   \end{syntax}
+%   这五个函数都接收5个参数，然后只使用函数名\meta{描述}部分中罗马数字所指示的参数，其余参数都被丢弃。
+% \end{function}
+% 
+% \begin{function}[EXP]
+%   {
+%     \use_i:nnnnnn, \use_ii:nnnnnn, 
+%     \use_iii:nnnnnn, \use_iv:nnnnnn, 
+%     \use_v:nnnnnn, \use_vi:nnnnnn
+%   }
+%   \begin{syntax}
+%     \cs{use_i:nnnnnn} \Arg{{参数}_1} \Arg{{参数}_2} \Arg{{参数}_3} \Arg{{参数}_4} \Arg{{参数}_5} \Arg{{参数}_6}
+%     ...
+%   \end{syntax}
+%   这六个函数都接收6个参数，然后只使用函数名\meta{描述}部分中罗马数字所指示的参数，其余参数都被丢弃。
+% \end{function}
+% 
+% \begin{function}[EXP]
+%   {
+%     \use_i:nnnnnnn, \use_ii:nnnnnnn, 
+%     \use_iii:nnnnnnn, \use_iv:nnnnnnn, 
+%     \use_v:nnnnnnn, \use_vi:nnnnnnn, 
+%     \use_vii:nnnnnnn
+%   }
+%   \begin{syntax}
+%     \cs{use_i:nnnnnnn} \Arg{{参数}_1} \Arg{{参数}_2} \Arg{{参数}_3} \Arg{{参数}_4} \Arg{{参数}_5} \Arg{{参数}_6} \Arg{{参数}_7}
+%     ...
+%   \end{syntax}
+%   这七个函数都接收7个参数，然后只使用函数名\meta{描述}部分中罗马数字所指示的参数，其余参数都被丢弃。
+% \end{function}
+% 
+% \begin{function}[EXP]
+%   {
+%     \use_i:nnnnnnnn, \use_ii:nnnnnnnn, 
+%     \use_iii:nnnnnnnn, \use_iv:nnnnnnnn, 
+%     \use_v:nnnnnnnn, \use_vi:nnnnnnnn, 
+%     \use_vii:nnnnnnnn, \use_viii:nnnnnnnn
+%   }
+%   \begin{syntax}
+%     \cs{use_i:nnnnnnnn}\Arg{{参数}_1}\Arg{{参数}_2}\Arg{{参数}_3}\Arg{{参数}_4}\Arg{{参数}_5}\Arg{{参数}_6}\Arg{{参数}_7}\Arg{{参数}_8}
+%     ...
+%   \end{syntax}
+%   这八个函数都接收8个参数，然后只使用函数名\meta{描述}部分中罗马数字所指示的参数，其余参数都被丢弃。
+% \end{function}
+% 
+% \begin{function}[EXP]
+%   {
+%     \use_i:nnnnnnnnn, \use_ii:nnnnnnnnn, 
+%     \use_iii:nnnnnnnnn, \use_iv:nnnnnnnnn, 
+%     \use_v:nnnnnnnnn, \use_vi:nnnnnnnnn, 
+%     \use_vii:nnnnnnnnn, \use_viii:nnnnnnnnn, 
+%     \use_ix:nnnnnnnnn
+%   }
+%   \begin{syntax}
+%     \footnotesize
+%     \cs{use_i:nnnnnnnnn}\Arg{{参数}_1}\Arg{{参数}_2}\Arg{{参数}_3}\Arg{{参数}_4}\Arg{{参数}_5}\Arg{{参数}_6}\Arg{{参数}_7}\Arg{{参数}_8}\Arg{{参数}_9}
+%     ...
+%   \end{syntax}
+%   这九个函数都接收9个参数，然后只使用函数名\meta{描述}部分中罗马数字所指示的参数，其余参数都被丢弃。
+% \end{function}
+% 
+% \begin{function}[EXP, added = 2019-06-02]{\use_ii_i:nn}
+%   \begin{syntax}
+%     \cs{use_ii_i:nn} \Arg{{参数}_1} \Arg{{参数}_2}
+%   \end{syntax}
+%   此函数接收2个参数，在使用的同时交换这两个参数的顺序。举例说明如下：
+%   \begin{latexexample}[gobble=6]
+%     % 使用：
+%     \use_ii_i:nn {abc} { {def} } 
+%     % 将会在输入流中留下：{def} abc
+%   \end{latexexample}
+% \end{function}
+%
+% \begin{function}[EXP]
+%   {
+%     \use_none:n, \use_none:nn, 
+%     \use_none:nnn, \use_none:nnnn, 
+%     \use_none:nnnnn, \use_none:nnnnnn, 
+%     \use_none:nnnnnnn, \use_none:nnnnnnnn, 
+%     \use_none:nnnnnnnnn
+%   }
+%   \begin{syntax}
+%     \cs{use_none:n} \Arg{{参数}_1}
+%     相当于\LaTeXe{}中的\tn{@gobble}\Arg{{参数}_1}（\tn{long}\tn{def}\tn{@gobble}|#1{}|）
+%     \vspace*{.5em}
+%     \cs{use_none:nn} \Arg{{参数}_1} \Arg{{参数}_2}
+%     相当于\LaTeXe{}中的\tn{@gobbletwo}\Arg{{参数}_1}\Arg{{参数}_2}（\tn{long}\tn{def}\tn{@gobbletwo}|#1#2{}|）
+%     \vspace*{.5em}
+%   \end{syntax}
+%   这些函数接收$1\sim 9$个参数，然后将所接收的参数删除。
+% \end{function}
+% 
+% 以上函数可以用在条件函数的定义中来\hypertarget{use}{执行判定的程序走向}。举例说明如下：
+% 
+% \begingroup
+% \kaishu 
+% 假设要定义一个函数，形如：\cs{csmod_if_eq:NNTF} \meta{{参数}_1} \meta{{参数}_2} 
+% \Arg{{参数}_3} \Arg{{参数}_4}，此函数具有这样的判断功能：\meta{{参数}_1}与
+% \meta{{参数}_2}是两条命令，如果\meta{{参数}_1}与\meta{{参数}_2}的定义相同，
+% 就执行\meta{{参数}_3} ，否则执行\meta{{参数}_4}。可用如下方法定义它：
+% \begin{latexsyntax}[gobble=4,rulecolor=\color{yellow}]
+%   \cs_new:Npn \csmod_if_eq:NNTF #1#2
+%     {
+%       \if_meaning:w #1#2
+%         \exp_after:wN 
+%         \use_i:nn
+%       \else:
+%         \exp_after:wN
+%         \use_ii:nn
+%       \fi:
+%     }
+% \end{latexsyntax}
+% 其中，\cs{exp_after:wN} \meta{{记号}_1} \meta{{记号}_2}的功能是：
+% 先展开\meta{{记号}_2}， 在执行\meta{{记号}_1}。上述代码的作用是：
+% 如果\meta{{参数}_1}与\meta{{参数}_2}这两条命令的定义相同，则执行：
+% \cs{exp_after:wN} \cs{use_i:nn}，这时会留下\cs{use_i:nn}（不会被展开，跳过它）
+% 而去完成整个条件控制命令语句（注：执行完条件控制命令语句的相应分支后并不代表此命令
+% 语句就结束了，当系统识别到\cs{fi:}后才表示整个条件语句的结束），条件控制命令语句
+% 结束后\meta{{参数}_3}\meta{{参数}_4}作为其参数得到：
+% \cs{use_i:nn}\Arg{{参数}_3}\Arg{{参数}_4}，然后再展开此函数，也就是执行\meta{{参数}_3}。
+% 如果\meta{{参数}_1}与\meta{{参数}_2}这两条命令的定义不同，则执行执行：
+% \cs{exp_after:wN} \cs{use_ii:nn}，这时会留下\cs{use_ii:nn}（不会被展开），
+% 条件命令语句结束后\meta{{参数}_3}\meta{{参数}_4}作为其参数得到：
+% \cs{use_ii:nn}\Arg{{参数}_3} \Arg{{参数}_4}， 然后再展开此函数，也就是执行
+% \meta{{参数}_4}。这样一来我们就定义了一个具有TF分支的条件函数。
+% 
+% 接下来再定义一个与上面那个函数相对应的只有T分支的条件函数：此函数形如：
+% \cs{csmod_if_eq:NNT} \meta{{参数}_1} \meta{{参数}_2} \Arg{{参数}_3}，\meta{{参数}_1}
+% 与\meta{{参数}_2}是两条命令，如果二者的定义相同，就执行\meta{{参数}_3}，否则啥也不做。
+% 可这样定义它:
+% \begin{latexsyntax}[gobble=4,rulecolor=\color{yellow}]
+%   \cs_new:Npn \csmod_if_eq:NNT #1#2
+%     {
+%       \if_meaning:w #1#2
+%         \exp_after:wN 
+%         \use:n
+%       \else:
+%         \exp_after:wN
+%         \use_none:n
+%       \fi:
+%     }
+% \end{latexsyntax}
+% 上述代码的作用是：
+% 如果\meta{{参数}_1}与\meta{{参数}_2}这两条命令的定义相同，则执行：
+% \cs{exp_after:wN} \cs{use:n}，这时会留下\cs{use:n}（不会被展开），条件命令语句结束后
+% \meta{{参数}_3}作为其参数得到：\cs{use:n}\Arg{{参数}_3}， 然后再展开此函数，也就是执行
+% \meta{{参数}_3}。
+% 如果\meta{{参数}_1}与\meta{{参数}_2}这两条命令的定义不同，则执行：
+% \cs{exp_after:wN} \cs{use_none:n}，这时会留下\cs{use_none:n}（不会被展开），
+% 条件命令语句结束后\meta{{参数}_3}作为其参数得到：\cs{use_none:n}\Arg{{参数}_3}，
+% 然后再展开此函数，也就是移除\meta{{参数}_3}，并不执行它。
+% 这样一来我们就定义了一个具有T分支的条件函数。
+% 
+% 紧接着再定义一个与前面所对应的只有F分支的条件函数：此函数形如：
+% \cs{csmod_if_eq:NNF} \meta{{参数}_1} \meta{{参数}_2} \Arg{{参数}_3}
+% \meta{{参数}_1}与\meta{{参数}_2}是两条命令，如果二者的定义不同，就执行\meta{{参数}_3}，
+% 否则啥也不做。此函数可这样定义:
+% \begin{latexsyntax}[gobble=4,rulecolor=\color{yellow}]
+%   \cs_new:Npn \csmod_if_eq:NNF #1#2
+%     {
+%       \if_meaning:w #1#2
+%         \exp_after:wN 
+%         \use_none:n
+%       \else:
+%         \exp_after:wN
+%         \use:n
+%       \fi:
+%     }
+% \end{latexsyntax}
+% 上述代码的作用是：
+% 如果\meta{{参数}_1}与\meta{{参数}_2}这两条命令的定义相同，则执行：\cs{exp_after:wN} \cs{use_none:n}这时会留下\cs{use_none:n}（不会被展开），条件命令语句结束后\meta{{参数}_3}作为其参数得到：\cs{use_none:n}\Arg{{参数}_3}， 然后再展开此函数，也就是移除\meta{{参数}_3}，并不执行它。
+% 如果\meta{{参数}_1}与\meta{{参数}_2}这两条命令的定义不同，则执行执行：\cs{exp_after:wN} \cs{use:n}，这时会留下\cs{use:n}（不会被展开），条件命令语句结束后\meta{{参数}_3}作为其参数得到：\cs{use:n}\Arg{{参数}_3}， 然后再展开此函数，也就是执行\meta{{参数}_3}。这样一来我们就定义了一个具有F分支的条件函数。
+%
+% 最后，再顺便看一下谓词函数怎么定义，此函数形如：\cs{cs_mod_if_eq_p:NN}\meta{{参数}_1}\meta{{参数}_2}，作用是：判断命令\meta{{参数}_1}与\meta{{参数}_2}的定义是否相同后直接返回判断结果。此函数可这样定义:
+% \begin{latexsyntax}[gobble=4,rulecolor=\color{yellow}]
+%   \cs_new:Npn \csmod_if_eq_p:NN #1#2
+%     {
+%       \if_meaning:w #1#2
+%         \exp_after:wN 
+%         \c_true_bool
+%       \else:
+%         \exp_after:wN
+%         \c_false_bool
+%       \fi:
+%     }
+% \end{latexsyntax}
+% 上述代码的作用是：
+% 如果命令\meta{{参数}_1}与\meta{{参数}_2}的定义相同，则给出\cs{c_true_bool}，
+% 否则给出\cs{c_false_bool}。注意：\cs{c_true_bool}和\cs{c_false_bool}之前一定要加上
+% \cs{exp_after:wN} ，防止其在执行条件语句的过程中被展开，而条件语句在执行结束后则原样留下它们。
+%
+% 实际上，在系统中早就已经定义了用来判断两条命令的定义是否相同的函数，分别如下：
+% \begin{itemize}
+%   \item 条件函数：\cs{cs_if_eq:NNTF}、\cs{cs_if_eq:NNT}、\cs{cs_if_eq:NNF}
+%   \item 谓词函数：\cs{cs_if_eq_p:NN}
+% \end{itemize}
+% 它们在系统中（2023年之前）是这么定义的（一种很巧妙的方法）：
+% \begin{latexsyntax}[gobble=4,rulecolor=\color{yellow}]
+%   % 先定义几个用于执行肯定语句的函数：
+%   \cs_new:Npn \__prg_TF_true:w { \fi: \use_i:nn }
+%   \cs_new:Npn \__prg_T_true:w { \fi: \use:n }
+%   \cs_new:Npn \__prg_F_true:w { \fi: \use_none:n }
+%   \cs_new:Npn \__prg_p_true:w { \fi: \c_true_bool }
+%   % 然后是具体定义：
+%   \cs_new:Npn \cs_if_eq:NNTF #1#2
+%     {
+%       \if_meaning:w #1#2 \__prg_TF_true:w \fi: \use_ii:nn
+%     }
+%   \cs_new:Npn \cs_if_eq:NNT #1#2
+%     {
+%       \if_meaning:w #1#2 \__prg_T_true:w \fi: \use_none:n
+%     }
+%   \cs_new:Npn \cs_if_eq:NNF #1#2
+%     {
+%       \if_meaning:w #1#2 \__prg_F_true:w \fi: \use:n
+%     }
+%   \cs_new:Npn \cs_if_eq_p:NN #1#2
+%     {
+%       \if_meaning:w #1#2 \__prg_p_true:w \fi: \c_false_bool
+%     }
+% \end{latexsyntax}
+% 与前面那种方法相比，这种方法借用了一系列私有函数来辅助完成定义，更加巧妙！
+% 如今这些函数在系统中则是这样定义的：
+% \begin{latexsyntax}[gobble=4,rulecolor=\color{yellow}]
+%   \prg_new_conditional:Npnn \cs_if_eq:NN #1#2 { p , T , F , TF }
+%     {
+%       \if_meaning:w #1#2
+%         \prg_return_true: 
+%       \else: 
+%         \prg_return_false: 
+%       \fi:
+%     }
+% \end{latexsyntax}
+% \endgroup
+%
+% \subsection*{参数的完全展开}
+% 
+% \begin{function}[EXP, added = 2018-06-18, updated = 2023-07-05]{\use:e}
+%   \begin{syntax}
+%     \cs{use:e}\Arg{可展开的记号}
+%   \end{syntax}
+%   将所接收的参数完全展开。这是一个具有e-型展开的函数（也就是参数说明符中有e的函数），因此，若此函数所接收的参数中出现形参符|#|（类代码为6），无需双写它，另外，此函数在要被完全展开的环境中（具有x-型或e-型展开的函数中）可以被完全展开。
+%     
+%   该函数实际上就是原语\tn{expanded}，其定义如下：
+%   \begin{latexsyntax}[gobble=6,rulecolor=\color{yellow}]
+%     \cs_set:Npn \use:e #1 { \tex_expanded:D {#1} }
+%   \end{latexsyntax}
+% \end{function}
+% 
+% \begin{function}{\use:x}
+%   \begin{syntax}
+%     \cs{use:x}\marg{可展开的记号}
+%   \end{syntax}
+%   将所接收的参数完全展开，这是一个具有x-型展开的函数（也就是参数说明符中有x的函数），因此，若此函数所接收的参数中出现形参符|#|（类代码为6），必须双写它（即具有|##|形式），另外，此函数在要被完全展开的环境中（具有x-型或e-型展开的函数中）不能被完全展开。
+% \end{function}
+% 
+% 为加深对这两个函数的理解，现举例说明如下（也可参看：\url{https://ask.latexstudio.net/ask/question/8188.html}）：
+%
+% \begin{latexexample}[gobble=4]
+%   %先定义一个tl型常量
+%   \tl_const:Nx \c_mymod_test_tl { 上善若水 }
+%   % 使用
+%   \use:e{ \use:x{ \c_mymod_test_tl } }
+%   \use:x{ \use:x{ \c_mymod_test_tl } }
+%   % 都会得到：
+%   % \use:x { 上善若水 }
+%   % 函数\use:x 不会被展开，但是其参数\c_mymod_test_tl会被展开，这个展开是外层的\use:e 引起的（而非\use:x）。
+%   
+%   % 使用
+%   \use:e{ \use:e{ \c_mymod_test_tl } }
+%   \use:x{ \use:e{ \c_mymod_test_tl } }
+%   % 都会得到：上善若水
+%   % 里层的\use:e 会被展开，它接收一个参数，即\c_mymod_test_tl，然后将其参数展开，得到：上善若水。此处\c_mymod_test_tl 的展开是由里层的这个\use:e 引起的。
+% \end{latexexample}
+%   
+% \subsection*{带分隔符参数的挑选}~
+% \begin{function}[EXP]{\use_none_delimit_by_q_nil:w, \use_none_delimit_by_q_stop:w, \use_none_delimit_by_q_recursion_stop:w}
+%   \begin{syntax}
+%     \cs{use_none_delimit_by_q_nil:w} \meta{参数} \cs{q_nil}
+%     \cs{use_none_delimit_by_q_stop:w} \meta{参数} \cs{q_stop}
+%     \cs{use_none_delimit_by_q_recursion_stop:w} \meta{参数} \cs{q_recursion_stop}
+%   \end{syntax}
+%   这几个函数接收在其之后并在分隔符（\cs{q_nil}、\cs{q_stop}、\cs{q_recursion_stop}）之前的\meta{参数}，然后将所接收的参数移除。
+%   它们的定义如下：
+%   \begin{latexsyntax}[gobble=6,rulecolor=\color{yellow}]
+%     \cs_set:Npn \use_none_delimit_by_q_nil:w  #1 \q_nil  { }
+%     \cs_set:Npn \use_none_delimit_by_q_stop:w #1 \q_stop { }
+%     \cs_set:Npn \use_none_delimit_by_q_recursion_stop:w #1 \q_recursion_stop { }
+%   \end{latexsyntax}
+% \end{function}
+% 
+% \begin{function}[EXP]{\use_i_delimit_by_q_nil:nw, \use_i_delimit_by_q_stop:nw, \use_i_delimit_by_q_recursion_stop:nw }
+%   \begin{syntax}
+%     \cs{use_i_delimit_by_q_nil:nw} \Arg{{参数}_1} \meta{{参数}_2} \cs{q_nil}
+%     \cs{use_i_delimit_by_q_stop:nw} \Arg{{参数}_1} \meta{{参数}_2} \cs{q_stop}
+%     \cs{use_i_delimit_by_q_recursion_stop:nw} \Arg{{参数}_1} \meta{{参数}_2} \cs{q_recursion_stop}
+%   \end{syntax}
+%   这几个函数接收在其之后并在分隔符（\cs{q_nil}、\cs{q_stop}、\cs{q_recursion_stop}）之前的两个参数（第一个参数用大括号包裹，第二个参数为第一个参数和分隔符之间的内容），然后只使用紧跟在其后的\meta{{参数}_1}，而在\Arg{{参数}_1}之后和分隔符之前的\meta{{参数}_2}则会被移除。它们的定义如下：
+%   \begin{latexsyntax}[gobble=6,rulecolor=\color{yellow}]
+%     \cs_set:Npn \use_i_delimit_by_q_nil:nw  #1#2 \q_nil  {#1}
+%     \cs_set:Npn \use_i_delimit_by_q_stop:nw #1#2 \q_stop {#1}
+%     \cs_set:Npn \use_i_delimit_by_q_recursion_stop:nw
+%       #1#2 \q_recursion_stop {#1}
+%   \end{latexsyntax}
+% \end{function}
+% 
+% \section{条件处理}\label{subsec:cstjcl}
+% 
+% 在\LaTeX3中，有三个与条件处理相关的概念：
+% \begin{description}
+%   \item [分支条件（Branching conditionals）：]可用于做出某种条件判断并直接在其参数中执行相应（true或false）代码的函数，比如|\cs_if_free:NTF|。
+%   \item [谓词（predicates）：]在条件函数的\meta{描述}末尾加一个|_p|并去除\meta{参数说明}中的 |T| 和 |F| 便构成了一个与条件函数相对应的谓词函数（注意：条件函数必须是可完全展开的），此函数做出条件判断后直接返回判断结果为真或假（布尔值：\cs{c_true_bool}或\cs{c_false_bool}），比如|\cs_if_free_p:N|就是一个谓词函数。
+%^^A   （{\kaishu 对谓词的理解：谓语表示动作状态，在条件处理中，判断某个对象是否符合指定条件后给出判断结果就是一个动作状态，故而将这种用于做出条件判断后直接给出判断结果的函数称为谓词函数。}）
+%   \item [原语条件（Primitive conditionals）：]这是指在plain \TeX{}和\LaTeXe{}中使用的原始条件处理命令（如：|\ifx...\else...\fi|），不鼓励在\pkg{expl3}中使用它们（当然在一些底层定义中仍会用到），因为相比之下它们更加脆弱，并且在很多情况下完成某种任务要比上面两种类型的条件需要更多的展开控制（故而完成同一任务需要更多的代码）。
+% \end{description}
+% 
+% 下面两个常量用于储存条件测试结果的两个布尔值（true和false）。
+% 
+% \begin{variable}{\c_true_bool, \c_false_bool}
+%   分别表示布尔值true和false。它们的定义如下：
+%   \begin{latexsyntax}[gobble=6,rulecolor=\color{yellow}]
+%     \tex_chardef:D \c_true_bool  = 1 ~
+%     \tex_chardef:D \c_false_bool = 0 ~
+%   \end{latexsyntax}
+% \end{variable}
+% {
+%   \kaishu 
+%   补充：“\cs{tex_chardef:D}\meta{控制序列}|=|\meta{字符编码}”（原语\tn{chardef}）的作用是：使\meta{控制序列}等同于\meta{字符编码}（其定义参看\hyperlink{apdx:charcode}{附录A.2}）所指定的字符。比如：
+% \begin{latexexample}[gobble=4]
+%   % 使用如下定义：
+%   \tex_chardef:D \% = `\%   
+%   % 或写为：十进制：\tex_chardef:D \% =37、八进制：\tex_chardef:D \% = '45、十六进制：  \tex_chardef:D \% = "25
+%   % 之后控制符 \% 就相当于是 \char37
+% \end{latexexample}
+% 其中，\meta{字符编码}可以是\TeX{}允许的各种进制的数字，也可以是用反引号（|`|）提取得到的字符编码。
+% 
+% 此外，由\cs{tex_chardef:D}定义的\meta{控制序列}还可作为数字使用，比如：
+% \begin{latexexample}
+%   \tex_chardef:D \% = 37
+%   % 使用如下代码：
+%   a\% 
+%   % 将会得到：a%
+%   % 使用如下代码：
+%   a \tex_number:D \% 
+%   % 将会得到：a37
+% \end{latexexample}
+}
+% 
+% \subsection{测试控制序列}
+% 
+% \subsubsection*{测试两个控制序列的定义是否相同}
+% \begin{function}[pTF]{\cs_if_eq:NN}
+%   \begin{syntax}
+%     \cs{cs_if_eq_p:NN} \meta{{控制序列}_1} \meta{{控制序列}_2}  
+%     \cs{cs_if_eq:NNTF} \meta{{控制序列}_1} \meta{{控制序列}_2} \Arg{条件为真时执行的代码} \Arg{条件为假时执行的代码}  
+%   \end{syntax}
+%   检查两个控制序列（\meta{{控制序列}_1}和\meta{{控制序列}_2}）的定义是否相同并返回相应布尔值或执行相应条件。
+% \end{function}
+% 
+% \subsubsection*{测试控制序列是否已有定义（或声明）}
+% \begin{function}[pTF]{\cs_if_exist:N, \cs_if_exist:c}
+%   \begin{syntax}
+%     \cs{cs_if_exist_p:N} \meta{控制序列}  
+%     \cs{cs_if_exist:NTF} \meta{控制序列} \Arg{条件为真时执行的代码} \Arg{条件为假时执行的代码}  
+%   \end{syntax}
+%   检查所给定\meta{控制序列}的定义（或声明）是否已存在并返回相应布尔值或执行相应条件。
+% \end{function}
+% 
+% \subsubsection*{测试控制序列定义并使用该控制序列（不同于条件函数和谓词函数）}
+% \begin{function}{\cs_if_exist_use:N, \cs_if_exist_use:c}
+%   \begin{syntax}
+%     \cs{cs_if_exist_use:N} \meta{控制序列}
+%   \end{syntax}
+%   此函数表示测试\meta{命令}当前是否已存在，若已存在则直接使用该命令，否则啥也不做（可用于动态调用命令，因为在某些情况下可能不知道某些命令是否存在，如果不存在，直接调用就会出错）。该函数的定义为：
+%   \begin{latexsyntax}[gobble=6,rulecolor=\color{yellow}]
+%     \cs_set:Npn \cs_if_exist_use:N #1
+%       { \cs_if_exist:NTF #1 { #1 } { } }
+%   \end{latexsyntax}
+% \end{function}
+% 
+% \begin{function}[TF]{\cs_if_exist_use:N, \cs_if_exist_use:c}
+%   \begin{syntax}
+%     \cs{cs_if_exist_use:N} \meta{控制序列} \Arg{条件为真时执行的代码} \Arg{条件为假时执行的代码}  
+%   \end{syntax}
+%   此函数表示测试\meta{控制序列}当前是否已存在，若已存在则直接使用该命令，并执行条件为真时的代码，若不存在则直接执行条件为假时的代码。这几个函数的定义为：
+%   \begin{latexsyntax}[gobble=6,rulecolor=\color{yellow}]
+%     \cs_set:Npn \cs_if_exist_use:NTF #1#2
+%       { \cs_if_exist:NTF #1 { #1 #2 } }
+%     \cs_set:Npn \cs_if_exist_use:NF #1
+%       { \cs_if_exist:NTF #1 { #1 } }
+%     \cs_set:Npn \cs_if_exist_use:NT #1 #2
+%       { \cs_if_exist:NTF #1 { #1 #2 } { } }
+%   \end{latexsyntax}
+% \end{function}
+% 
+% \subsubsection*{测试控制序列是否没有定义（或声明）：}~
+% \begin{function}[pTF]{\cs_if_free:N, \cs_if_free:c}
+%   \begin{syntax}
+%     \cs{cs_if_free_p:N} \meta{控制序列}  
+%     \cs{cs_if_free:NTF} \meta{控制序列} \Arg{条件为真时执行的代码} \Arg{条件为假时执行的代码}  
+%   \end{syntax}
+%   检查给定的\meta{控制序列} 是否未定义（或声明）并返回相应布尔值或执行相应条件。
+% \end{function}
+%
+% \subsection{原始条件处理命令}
+%
+% 除以上条件测试函数外，\TeX{}中也有一些对应的基本条件处理命令。下面对它们进行介绍（这些命令改用了\LaTeX3语法来书写）：
+% 
+% \subsubsection*{总是为真}
+% \begin{function}[EXP]{\if_true:, \else:, \fi:}
+%   \begin{syntax}
+%     \cs{if_true:} \meta{肯定语句} \cs{else:} \meta{否定语句} \cs{fi:} 
+%     其在\TeX{}中书写为：\tn{iftrue} \meta{肯定语句} \tn{else} \meta{否定语句} \tn{fi}
+%   \end{syntax}
+%   总是执行\meta{肯定语句}。常用于其他命令的定义中，根据某种条件判断结果决定取舍。
+% \end{function}
+% 
+% \subsubsection*{总是为假}
+% \begin{function}[EXP]{\if_false:, \else:, \fi:}
+%   \begin{syntax}
+%     \cs{if_false:} \meta{肯定语句} \cs{else:} \meta{否定语句} \cs{fi:}
+%     其在\TeX{}中书写为：\tn{iffalse} \meta{肯定语句} \tn{else} \meta{否定语句} \tn{fi}
+%   \end{syntax}
+%   总是执行\meta{否定语句}。常用于其他命令的定义中，根据某种条件判断的结果决定取舍。可使用命令\cs{if_false:} \meta{肯定语句} \cs{fi:}将肯定语句作为注释文本。
+% \end{function}
+% 
+% \subsubsection*{反转真假}
+% \begin{function}[EXP]{\reverse_if:N}
+%   \begin{syntax}
+%     \cs{reverse_if:N} \meta{布尔条件处理命令}
+%     其在\TeX{}中书写为：\tn{unless}
+%   \end{syntax}
+%   将\meta{布尔条件处理命令}的真假处理反转（也就是反转\cs{else:}和\cs{fi:}分隔的条件分支）。
+% \end{function}
+% 
+% \subsubsection*{检查命令定义是否相同}
+% \begin{function}[EXP]{\if_meaning:w, \else:, \fi:}
+%   \begin{syntax}
+%     \cs{if_meaning:w} \meta{{命令}_1} \meta{{命令}_2} \meta{肯定语句} \cs{else:} \meta{否定语句} \cs{fi:}
+%     其在\TeX{}中书写为：\tn{ifx} \meta{{命令}_1} \meta{{命令}_2} \meta{肯定语句} \tn{else} \meta{否定语句} \tn{fi}
+%   \end{syntax}
+%   如果\meta{{命令}_1}与\meta{{命令}_2}具有相同的定义（命令既可以是函数，也可以是变量），执行\meta{肯定语句}，否则执行\meta{否定语句}。若两命令都未经定义，则系统认为二者相同。
+% \end{function}
+% 
+% \subsubsection*{检查字符代码}
+% \begin{function}[EXP]{\if:w, \if_charcode:w, \else:, \fi:}
+%   \begin{syntax}
+%     \cs{if:w} \meta{{记号}_1} \meta{{记号}_2} \meta{肯定语句} \cs{else:} \meta{否定语句} \cs{fi:}
+%     或者它的别名：\cs{if_charcode:w} \meta{{记号}_1} \meta{{记号}_2} \meta{肯定语句} \cs{else:} \meta{否定语句} \cs{fi:}
+%     其在\TeX{}中书写为：\tn{if} \meta{{记号}_1} \meta{{记号}_2} \meta{肯定语句} \tn{else} \meta{否定语句} \tn{fi} 
+%   \end{syntax}
+%   用于判断\meta{{记号}_1}与\meta{{记号}_2}的\emph{字符代码}是否相同，若相同执行\meta{肯定语句}，否则执行\meta{否定语句}。其中，记号可以是一个具体的字符，也可以是代表字符的命令。
+% \end{function}
+% 
+% \subsubsection*{检查类别码}
+% \begin{function}[EXP]{\if_catcode:w, \else:, \fi:}
+%   \begin{syntax}
+%     \cs{if_catcode:w} \meta{{记号}_1} \meta{{记号}_2} \meta{肯定语句} \cs{else:} \meta{否定语句} \cs{fi:}
+%     其在\TeX{}中书写为：\tn{ifcat} \meta{{记号}_1} \meta{{记号}_2} \meta{肯定语句} \tn{else} \meta{否定语句} \tn{fi}
+%   \end{syntax}
+%   用于判断\meta{{记号}_1}与\meta{{记号}_2}的\emph{类别码}是否相同，若相同执行\meta{肯定语句}，否则执行\meta{否定语句}。其中，记号可以是一个具体的字符，也可以是代表字符的命令。
+% \end{function}
+% 
+% \subsubsection*{检查命令定义是否存在}
+% \begin{function}[EXP]{\if_cs_exist:N, \else:, \fi:}
+%   \begin{syntax}
+%     \cs{if_cs_exist:N} \meta{命令} \meta{肯定语句} \cs{else:} \meta{否定语句} \cs{fi:}
+%     其在\TeX{}中书写为：\tn{ifdefined} \meta{命令} \meta{肯定语句} \tn{else} \meta{否定语句} \tn{fi}
+%   \end{syntax}
+%   若\meta{命令}已被定义，则执行\meta{肯定语句}，反之执行 \meta{否定语句}。
+% \end{function}
+% 
+% \subsubsection*{检查由\meta{命令名}构成的命令的定义是否存在}
+% \begin{function}[EXP]{\if_cs_exist:w, \else:, \fi:}
+%   \begin{syntax}
+%     \cs{if_cs_exist:w} \meta{命令名} \meta{肯定语句} \cs{else:} \meta{否定语句} \cs{fi:}
+%     其在\TeX{}中书写为：\tn{ifcsname} \meta{命令名} \tn{endcsname} \meta{肯定语句} \tn{else} \meta{否定语句} \tn{fi}
+%   \end{syntax}
+%   若由\meta{命令名}所确定的命令已被定义，则执行\meta{肯定语句}，反之执行 \meta{否定语句}。
+% \end{function}
+% 
+% \subsubsection*{模式检查}\hypertarget{prgh:msjc}{~}
+% \begin{function}[EXP]{\if_mode_horizontal:, \else:, \fi:}
+%   \begin{syntax}
+%     \cs{if_mode_horizontal:} \meta{肯定语句} \cs{else:} \meta{否定语句} \cs{fi:}
+%     其在\TeX{}中书写为：\tn{ifhmode} \meta{肯定语句} \tn{else} \meta{否定语句} \tn{fi}
+%   \end{syntax} 
+%   如果当前处于水平模式，即段落模式（可换行）或左右模式（不可换行），则执行\meta{肯定语句}，否则执行\meta{否定语句}。   
+% \end{function}
+% 
+% \begin{function}[EXP]{\if_mode_vertical:, \else:, \fi:}
+%   \begin{syntax}
+%     \cs{if_mode_vertical:} \meta{肯定语句} \cs{else:} \meta{否定语句} \cs{fi:}
+%     其在\TeX{}中书写为：\tn{ifvmode} \meta{肯定语句} \tn{else} \meta{否定语句} \tn{fi}
+%   \end{syntax} 
+%   如果当前处于垂直模式，即页面模式（可换页）或上下模式（不可换页），则执行\meta{肯定语句}，否则执行\meta{否定语句}。   
+% \end{function}
+% 
+% \begin{function}[EXP]{\if_mode_math:, \else:, \fi:}
+%   \begin{syntax}
+%     \cs{if_mode_math:} \meta{肯定语句} \cs{else:} \meta{否定语句} \cs{fi:}
+%     其在\TeX{}中书写为：\tn{ifmmode} \meta{肯定语句} \tn{else} \meta{否定语句} \tn{fi}
+%   \end{syntax} 
+%   如果当前处于数学模式（行内数学模式或行间数学模式），则执行\meta{肯定语句}，否则执行\meta{否定语句}。   
+% \end{function}
+% 
+% \begin{function}[EXP]{\if_mode_inner:, \else:, \fi:}
+%   \begin{syntax}
+%     \cs{if_mode_inner:} \meta{肯定语句} \cs{else:} \meta{否定语句} \cs{fi:}
+%     其在\TeX{}中书写为：\tn{ifinner} \meta{肯定语句} \tn{else} \meta{否定语句} \tn{fi}
+%   \end{syntax}  
+%   如果当前处于左右模式、上下模式或行内数学模式，则执行\meta{肯定语句}，否则执行\meta{否定语句}。
+% \end{function}
+% 
+% \section{模式切换（开始一个段落）}
+% \begin{function}[added = 2017-07-04]{\mode_leave_vertical:}
+%   \begin{syntax}
+%     \cs{mode_leave_vertical:}
+%   \end{syntax}
+%   表示从垂直模式切换到水平模式，也就是开始一个段落。若当前已处于水平模式或数学模式，则此函数无任何作用。
+% \end{function}
+% 
+% \section{代码调试}
+% 
+% \begin{function}[added = 2017-07-16, updated = 2023-05-23]{\debug_on:n, \debug_off:n }
+%   \begin{syntax}
+%     \cs{debug_on:n} \Arg{逗号分隔列表}
+%     \cs{debug_off:n} \Arg{逗号分隔列表}     
+%   \end{syntax}
+%   表示开启和关闭一个代码调试区。其中，\meta{逗号分隔列表}中的内容由以下几个选项构成（对应不同的调试功能），其中一些也可在载入\pkg{expl3}作为其选项：
+%   \begin{description}
+%     \item[check-declarations：] 检查变量在使用之前是否都有过声明以及是否按照变量名\meta{作用域}部分体现的全局或局部性质正确地给变量（局部或全局）赋值。
+%     \item[check-expressions：] 检查整数（integer）、刚性长度（dimension）、弹性长度（skip）、数学模式弹性长度（muskip）表达式是否过早中止。
+%     \item[deprecation：] 检查代码中是否有即将被弃用的命令，有的话报错。
+%     \item[log-functions：] 记录函数定义。
+%     \item[all：] 包含以上所有。
+%   \end{description}
+% \end{function}
+% 
+% \begin{function}[added = 2017-11-28]{\debug_suspend:, \debug_resume:}
+%   \begin{syntax}
+%     \cs{debug_suspend:} \ldots{} \cs{debug_resume:}
+%   \end{syntax}
+%   暂停（suspend）或恢复（resume）代码调试。在暂停代码调试后，弃用错误或警告照常，不会被抑制。
+% \end{function}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{\pkg{l3basics} 实现原理}
+%
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+% \subsection{再次重命名一些\TeX{}原语}
+%
+% 在\pkg{l3names}模块给所有\TeX{}原语以一致的方法（\cs[no-index]{tex_\ldots:D} ）
+% 重命名后，我们还需为实际想要使用的原语另起一个合理的名字，后续会根据需求在
+% 适当的模块进行这种再定义操作，此处先定义一些，以便使用
+% \footnote{就“csname”的使用而言，这种重命名的代价是很高的，在没有好的替代方案
+% 的情况下，还是仅使用\cs[no-index]{tex_\ldots:D}名称。}。
+%
+% \begin{macro}[EXP]
+%   {
+%     \if_true:, \if_false:, \or:, \else:, \fi:, \reverse_if:N,
+%     \if:w, \if_charcode:w, \if_catcode:w, \if_meaning:w
+%   }
+%  对一些条件原语的再命名。
+%    \begin{macrocode}
+\tex_let:D \if_true:           \tex_iftrue:D
+\tex_let:D \if_false:          \tex_iffalse:D
+\tex_let:D \or:                \tex_or:D
+\tex_let:D \else:              \tex_else:D
+\tex_let:D \fi:                \tex_fi:D
+\tex_let:D \reverse_if:N       \tex_unless:D
+\tex_let:D \if:w               \tex_if:D
+\tex_let:D \if_charcode:w      \tex_if:D
+\tex_let:D \if_catcode:w       \tex_ifcat:D
+\tex_let:D \if_meaning:w       \tex_ifx:D
+\tex_let:D \if_bool:N          \tex_ifodd:D
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP]
+%   {
+%     \if_mode_math:,
+%     \if_mode_horizontal:,
+%     \if_mode_vertical:,
+%     \if_mode_inner:
+%   }
+%   \TeX{}中的模式检测。
+%    \begin{macrocode}
+\tex_let:D \if_mode_math:       \tex_ifmmode:D
+\tex_let:D \if_mode_horizontal: \tex_ifhmode:D
+\tex_let:D \if_mode_vertical:   \tex_ifvmode:D
+\tex_let:D \if_mode_inner:      \tex_ifinner:D
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\if_cs_exist:N, \if_cs_exist:w, \cs:w, \cs_end:}
+% 构建csname并测试控制序列是否存在。
+%    \begin{macrocode}
+\tex_let:D \if_cs_exist:N      \tex_ifdefined:D
+\tex_let:D \if_cs_exist:w      \tex_ifcsname:D
+\tex_let:D \cs:w               \tex_csname:D
+\tex_let:D \cs_end:            \tex_endcsname:D
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\exp_after:wN, \exp_not:N, \exp_not:n}
+% 五个控制宏展开的函数（以|\exp_|开头），
+% 在\textsf{l3expan}模块会详细描述它们的功能。 
+%    \begin{macrocode}
+\tex_let:D \exp_after:wN       \tex_expandafter:D
+\tex_let:D \exp_not:N          \tex_noexpand:D
+\tex_let:D \exp_not:n          \tex_unexpanded:D
+\tex_let:D \exp:w              \tex_romannumeral:D
+\tex_chardef:D \exp_end:  = 0 ~
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\token_to_meaning:N, \cs_meaning:N}
+% 分析诊断控制序列或记号（通过显示它们的定义）。
+%    \begin{macrocode}
+\tex_let:D \token_to_meaning:N \tex_meaning:D
+\tex_let:D \cs_meaning:N       \tex_meaning:D
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\tl_to_str:n, \token_to_str:N, \__kernel_tl_to_str:w}
+%   产生字符串。
+%    \begin{macrocode}
+\tex_let:D \tl_to_str:n          \tex_detokenize:D
+\tex_let:D \token_to_str:N       \tex_string:D
+\tex_let:D \__kernel_tl_to_str:w \tex_detokenize:D
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\scan_stop:, \group_begin:, \group_end:}
+% 接下来是三个基本函数，它们还有一个安全的内部对其版本，这会在\textsf{l3prg}中定义。
+%    \begin{macrocode}
+\tex_let:D \scan_stop:         \tex_relax:D
+\tex_let:D \group_begin:       \tex_begingroup:D
+\tex_let:D \group_end:         \tex_endgroup:D
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+%<@@=int>
+%    \end{macrocode}
+%
+% \begin{macro}[EXP]{\if_int_compare:w, \@@_to_roman:w}
+%   整数相关。
+%    \begin{macrocode}
+\tex_let:D \if_int_compare:w   \tex_ifnum:D
+\tex_let:D \@@_to_roman:w     \tex_romannumeral:D
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\group_insert_after:N}
+%  在组结束后添加材料。
+%    \begin{macrocode}
+\tex_let:D \group_insert_after:N \tex_aftergroup:D
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\exp_args:Nc, \exp_args:cc}
+% 下面两个函数会在\pkg{l3expan}模块讨论，但现在需要提前使用。
+%    \begin{macrocode}
+\tex_long:D \tex_def:D \exp_args:Nc #1#2
+  { \exp_after:wN #1 \cs:w #2 \cs_end: }
+\tex_long:D \tex_def:D \exp_args:cc #1#2
+  { \cs:w #1 \exp_after:wN \cs_end: \cs:w #2 \cs_end: }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP, documented-as=\token_to_meaning:N]
+%   {\token_to_meaning:c, \token_to_str:c, \cs_meaning:c}
+%  手动定义少量函数变体。其中，一些必要函数（\cs{use_i:nn}, \cs{use_ii:nn}, and \cs{exp_args:NNc}）在此处还尚未定义，但会在使用这些变体函数前定义它们。
+% \cs{cs_meaning:c}命令必须检查相应控制序列是否已有定义，以免错误地定义它。
+%    \begin{macrocode}
+\tex_def:D \token_to_str:c { \exp_args:Nc \token_to_str:N }
+\tex_long:D \tex_def:D \cs_meaning:c #1
+  {
+    \if_cs_exist:w #1 \cs_end:
+      \exp_after:wN \use_i:nn
+    \else:
+      \exp_after:wN \use_ii:nn
+    \fi:
+    { \exp_args:Nc \cs_meaning:N {#1} }
+    { \tl_to_str:n {undefined} }
+  }
+\tex_let:D \token_to_meaning:c = \cs_meaning:c
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{定义一些常数}
+%
+% \begin{variable}{\c_zero_int}
+% 常数\cs{c_zero_int}，它会被\textsf{l3alloc}模块的一些函数使用。其余的在
+% \textsf{l3int}中定义——至少能被用\cs{tex_chardef:D}或\cs{tex_mathchardef:D}
+% 定义。对于\textsf{l3int}模块需要的其它常数，在正确设置分配之前不能使用它们。
+%    \begin{macrocode}
+\tex_chardef:D \c_zero_int    = 0 ~
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{variable}{\c_max_register_int}
+% 在包模式下和引导\pkg{l3alloc}模块时都需要这个特定的整数，其在\pkg{l3int}模块有
+% 文档化的描述。\LuaTeX{}和那些包含Omega扩展的引擎比\eTeX{}有更多的可用寄存器。
+%    \begin{macrocode}
+\tex_ifdefined:D \tex_luatexversion:D
+  \tex_chardef:D \c_max_register_int = 65 535 ~
+\tex_else:D
+  \tex_ifdefined:D \tex_omathchardef:D
+    \tex_omathchardef:D \c_max_register_int = 65535 ~
+  \tex_else:D
+    \tex_mathchardef:D \c_max_register_int = 32767 ~
+  \tex_fi:D
+\tex_fi:D
+%    \end{macrocode}
+% \end{variable}
+%
+% \subsection{创建定义类函数}
+%
+% 开始定义典型的定义类函数。首先是局部性质的。
+%
+% \begin{macro}
+%   {
+%     \cs_set_nopar:Npn           , \cs_set_nopar:Npe           , \cs_set_nopar:Npx           ,
+%     \cs_set:Npn                 , \cs_set:Npe                 , \cs_set:Npx                 ,
+%     \cs_set_protected_nopar:Npn , \cs_set_protected_nopar:Npe , \cs_set_protected_nopar:Npx ,
+%     \cs_set_protected:Npn       , \cs_set_protected:Npe       , \cs_set_protected:Npx
+%   }
+% \LaTeX3中的所有赋值函数都应自然地受到保护，毕竟\TeX{}中的赋值原语也是如此，
+% 如果不是，则可能会引发一些问题。
+%    \begin{macrocode}
+\tex_let:D \cs_set_nopar:Npn            \tex_def:D
+\tex_let:D \cs_set_nopar:Npe            \tex_edef:D
+\tex_let:D \cs_set_nopar:Npx            \tex_edef:D
+\tex_protected:D \tex_long:D \tex_def:D \cs_set:Npn
+  { \tex_long:D \tex_def:D }
+\tex_protected:D \tex_long:D \tex_def:D \cs_set:Npe
+  { \tex_long:D \tex_edef:D }
+\tex_let:D \cs_set:Npx \cs_set:Npe
+\tex_protected:D \tex_long:D \tex_def:D \cs_set_protected_nopar:Npn
+  { \tex_protected:D \tex_def:D }
+\tex_protected:D \tex_long:D \tex_def:D \cs_set_protected_nopar:Npe
+  { \tex_protected:D \tex_edef:D }
+\tex_let:D \cs_set_protected_nopar:Npx \cs_set_protected_nopar:Npe
+\tex_protected:D \tex_long:D \tex_def:D \cs_set_protected:Npn
+  { \tex_protected:D \tex_long:D \tex_def:D }
+\tex_protected:D \tex_long:D \tex_def:D \cs_set_protected:Npe
+  { \tex_protected:D \tex_long:D \tex_edef:D }
+\tex_let:D \cs_set_protected:Npx \cs_set_protected:Npe
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \cs_gset_nopar:Npn           , \cs_gset_nopar:Npe           , \cs_gset_nopar:Npx           ,
+%     \cs_gset:Npn                 , \cs_gset:Npe                 , \cs_gset:Npx                 ,
+%     \cs_gset_protected_nopar:Npn , \cs_gset_protected_nopar:Npe , \cs_gset_protected_nopar:Npx ,
+%     \cs_gset_protected:Npn       , \cs_gset_protected:Npe       , \cs_gset_protected:Npx
+%   }
+%   上述函数的全局性版本。
+%    \begin{macrocode}
+\tex_let:D \cs_gset_nopar:Npn           \tex_gdef:D
+\tex_let:D \cs_gset_nopar:Npe           \tex_xdef:D
+\tex_let:D \cs_gset_nopar:Npx           \tex_xdef:D
+\cs_set_protected:Npn \cs_gset:Npn
+  { \tex_long:D \tex_gdef:D }
+\cs_set_protected:Npn \cs_gset:Npe
+  { \tex_long:D \tex_xdef:D }
+\tex_let:D \cs_gset:Npx \cs_gset:Npe
+\cs_set_protected:Npn \cs_gset_protected_nopar:Npn
+  { \tex_protected:D \tex_gdef:D }
+\cs_set_protected:Npn \cs_gset_protected_nopar:Npe
+  { \tex_protected:D \tex_xdef:D }
+\tex_let:D \cs_gset_protected_nopar:Npx \cs_gset_protected_nopar:Npe
+\cs_set_protected:Npn \cs_gset_protected:Npn
+  { \tex_protected:D \tex_long:D \tex_gdef:D }
+\cs_set_protected:Npn \cs_gset_protected:Npe
+  { \tex_protected:D \tex_long:D \tex_xdef:D }
+\tex_let:D \cs_gset_protected:Npx \cs_gset_protected:Npe
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{选择记号}
+%
+%    \begin{macrocode}
+%<@@=exp>
+%    \end{macrocode}
+%
+% \begin{variable}{\l_@@_internal_tl}
+% \pkg{l3expan}模块的临时记号列表变量，会被\cs{use:x}使用。这里没有使用|tl|
+% 方法来定义它，因为\pkg{l3basics}模块加载的更早（也就是说只能利用现有规则定义它）。
+%    \begin{macrocode}
+\cs_set_nopar:Npn \l_@@_internal_tl { }
+%    \end{macrocode}
+% \end{variable}
+%
+% \begin{macro}[EXP]{\use:c}
+%   该宏获取它的参数并从中返回一个csname。
+%    \begin{macrocode}
+\cs_set:Npn \use:c #1 { \cs:w #1 \cs_end: }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\use:x}
+% 完全展开它的参数并将其传递给输入流。\cs{l_@@_internal_tl}在上面已经有过设置。
+%    \begin{macrocode}
+\cs_set_protected:Npn \use:x #1
+  {
+    \cs_set_nopar:Npx \l_@@_internal_tl {#1}
+    \l_@@_internal_tl
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+%<@@=use>
+%    \end{macrocode}
+%
+% \begin{macro}[EXP]{\use:e}
+% 原语\tn{expanded}的封装。
+%    \begin{macrocode}
+\cs_set:Npn \use:e #1 { \tex_expanded:D {#1} }
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+%<@@=exp>
+%    \end{macrocode}
+%
+% \begin{macro}[EXP]{\use:n, \use:nn, \use:nnn, \use:nnnn}
+% 这些宏获取它们的参数并将其返回到输入流（去掉了外层括号）。
+%    \begin{macrocode}
+\cs_set:Npn \use:n    #1       {#1}
+\cs_set:Npn \use:nn   #1#2     {#1#2}
+\cs_set:Npn \use:nnn  #1#2#3   {#1#2#3}
+\cs_set:Npn \use:nnnn #1#2#3#4 {#1#2#3#4}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\use_i:nn, \use_ii:nn}
+% 相当于\LaTeXe{}中的 \tn{@firstoftwo}和\tn{@secondoftwo}。
+%    \begin{macrocode}
+\cs_set:Npn \use_i:nn  #1#2 {#1}
+\cs_set:Npn \use_ii:nn #1#2 {#2}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP]
+%   {
+%     \use_i:nnn , \use_ii:nnn , \use_iii:nnn , \use_i_ii:nnn ,
+%     \use_i:nnnn, \use_ii:nnnn, \use_iii:nnnn, \use_iv:nnnn  ,
+%     \use_i:nnnnn, \use_ii:nnnnn, \use_iii:nnnnn, \use_iv:nnnnn ,
+%       \use_v:nnnnn ,
+%     \use_i:nnnnnn, \use_ii:nnnnnn, \use_iii:nnnnnn, \use_iv:nnnnnn ,
+%       \use_v:nnnnnn , \use_vi:nnnnnn ,
+%     \use_i:nnnnnnn, \use_ii:nnnnnnn, \use_iii:nnnnnnn, \use_iv:nnnnnnn ,
+%       \use_v:nnnnnnn , \use_vi:nnnnnnn , \use_vii:nnnnnnn ,
+%     \use_i:nnnnnnnn, \use_ii:nnnnnnnn, \use_iii:nnnnnnnn, \use_iv:nnnnnnnn ,
+%       \use_v:nnnnnnnn , \use_vi:nnnnnnnn , \use_vii:nnnnnnnn , \use_vii:nnnnnnnn ,
+%     \use_i:nnnnnnnnn, \use_ii:nnnnnnnnn, \use_iii:nnnnnnnnn, \use_iv:nnnnnnnnn ,
+%       \use_v:nnnnnnnnn , \use_vi:nnnnnnnnn , \use_vii:nnnnnnnnn , \use_viii:nnnnnnnnn ,
+%       \use_ix:nnnnnnnnn
+%   }
+% 我们还需要一些函数来从较长的列表中挑选参数。
+%    \begin{macrocode}
+\cs_set:Npn \use_i:nnn    #1#2#3 {#1}
+\cs_set:Npn \use_ii:nnn   #1#2#3 {#2}
+\cs_set:Npn \use_iii:nnn  #1#2#3 {#3}
+\cs_set:Npn \use_i_ii:nnn #1#2#3 {#1#2}
+\cs_set:Npn \use_i:nnnn   #1#2#3#4 {#1}
+\cs_set:Npn \use_ii:nnnn  #1#2#3#4 {#2}
+\cs_set:Npn \use_iii:nnnn #1#2#3#4 {#3}
+\cs_set:Npn \use_iv:nnnn  #1#2#3#4 {#4}
+\cs_set:Npn \use_i:nnnnn   #1#2#3#4#5 {#1}
+\cs_set:Npn \use_ii:nnnnn  #1#2#3#4#5 {#2}
+\cs_set:Npn \use_iii:nnnnn #1#2#3#4#5 {#3}
+\cs_set:Npn \use_iv:nnnnn  #1#2#3#4#5 {#4}
+\cs_set:Npn \use_v:nnnnn   #1#2#3#4#5 {#5}
+\cs_set:Npn \use_i:nnnnnn   #1#2#3#4#5#6 {#1}
+\cs_set:Npn \use_ii:nnnnnn  #1#2#3#4#5#6 {#2}
+\cs_set:Npn \use_iii:nnnnnn #1#2#3#4#5#6 {#3}
+\cs_set:Npn \use_iv:nnnnnn  #1#2#3#4#5#6 {#4}
+\cs_set:Npn \use_v:nnnnnn   #1#2#3#4#5#6 {#5}
+\cs_set:Npn \use_vi:nnnnnn  #1#2#3#4#5#6 {#6}
+\cs_set:Npn \use_i:nnnnnnn   #1#2#3#4#5#6#7 {#1}
+\cs_set:Npn \use_ii:nnnnnnn  #1#2#3#4#5#6#7 {#2}
+\cs_set:Npn \use_iii:nnnnnnn #1#2#3#4#5#6#7 {#3}
+\cs_set:Npn \use_iv:nnnnnnn  #1#2#3#4#5#6#7 {#4}
+\cs_set:Npn \use_v:nnnnnnn   #1#2#3#4#5#6#7 {#5}
+\cs_set:Npn \use_vi:nnnnnnn  #1#2#3#4#5#6#7 {#6}
+\cs_set:Npn \use_vii:nnnnnnn #1#2#3#4#5#6#7 {#7}
+\cs_set:Npn \use_i:nnnnnnnn    #1#2#3#4#5#6#7#8 {#1}
+\cs_set:Npn \use_ii:nnnnnnnn   #1#2#3#4#5#6#7#8 {#2}
+\cs_set:Npn \use_iii:nnnnnnnn  #1#2#3#4#5#6#7#8 {#3}
+\cs_set:Npn \use_iv:nnnnnnnn   #1#2#3#4#5#6#7#8 {#4}
+\cs_set:Npn \use_v:nnnnnnnn    #1#2#3#4#5#6#7#8 {#5}
+\cs_set:Npn \use_vi:nnnnnnnn   #1#2#3#4#5#6#7#8 {#6}
+\cs_set:Npn \use_vii:nnnnnnnn  #1#2#3#4#5#6#7#8 {#7}
+\cs_set:Npn \use_viii:nnnnnnnn #1#2#3#4#5#6#7#8 {#8}
+\cs_set:Npn \use_i:nnnnnnnnn    #1#2#3#4#5#6#7#8#9 {#1}
+\cs_set:Npn \use_ii:nnnnnnnnn   #1#2#3#4#5#6#7#8#9 {#2}
+\cs_set:Npn \use_iii:nnnnnnnnn  #1#2#3#4#5#6#7#8#9 {#3}
+\cs_set:Npn \use_iv:nnnnnnnnn   #1#2#3#4#5#6#7#8#9 {#4}
+\cs_set:Npn \use_v:nnnnnnnnn    #1#2#3#4#5#6#7#8#9 {#5}
+\cs_set:Npn \use_vi:nnnnnnnnn   #1#2#3#4#5#6#7#8#9 {#6}
+\cs_set:Npn \use_vii:nnnnnnnnn  #1#2#3#4#5#6#7#8#9 {#7}
+\cs_set:Npn \use_viii:nnnnnnnnn #1#2#3#4#5#6#7#8#9 {#8}
+\cs_set:Npn \use_ix:nnnnnnnnn   #1#2#3#4#5#6#7#8#9 {#9} 
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\use_ii_i:nn}
+% 交换两个参数的顺序。
+%    \begin{macrocode}
+\cs_set:Npn \use_ii_i:nn #1#2 { #2 #1 }
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}[EXP]
+%   {
+%     \use_none_delimit_by_q_nil:w  ,
+%     \use_none_delimit_by_q_stop:w ,
+%     \use_none_delimit_by_q_recursion_stop:w
+%   }
+% 这些函数会吞噬其后的所有内容，直至遇到\cs{q_nil}, \cs{q_stop}, 
+% 或\cs{q_recursion_stop}。
+%    \begin{macrocode}
+\cs_set:Npn \use_none_delimit_by_q_nil:w  #1 \q_nil  { }
+\cs_set:Npn \use_none_delimit_by_q_stop:w #1 \q_stop { }
+\cs_set:Npn \use_none_delimit_by_q_recursion_stop:w #1 \q_recursion_stop { }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP]
+%   {
+%     \use_i_delimit_by_q_nil:nw  ,
+%     \use_i_delimit_by_q_stop:nw ,
+%     \use_i_delimit_by_q_recursion_stop:nw
+%   }
+% 与上面三个函数的不同之处在于，它们会执行所吞的第一个参数。当需要跳过映射序列的
+% 其余部分并想要以一种简单的方式控制接下来应该展开的内容时，这会非常有用。
+%    \begin{macrocode}
+\cs_set:Npn \use_i_delimit_by_q_nil:nw  #1#2 \q_nil  {#1}
+\cs_set:Npn \use_i_delimit_by_q_stop:nw #1#2 \q_stop {#1}
+\cs_set:Npn \use_i_delimit_by_q_recursion_stop:nw
+  #1#2 \q_recursion_stop {#1}
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{移除输入的记号}
+%
+% \begin{macro}[EXP]
+%   {
+%     \use_none:n,
+%     \use_none:nn,
+%     \use_none:nnn,
+%     \use_none:nnnn,
+%     \use_none:nnnnn,
+%     \use_none:nnnnnn,
+%     \use_none:nnnnnnn,
+%     \use_none:nnnnnnnn,
+%     \use_none:nnnnnnnnn
+%   }
+% 为了移除所输入的记号，我们采用标准的命名约定：吞噬记号的数量由函数名中
+% “|:|”后的参数说明符|n|的数量给出。虽然可以单独调用\cs{use_none:nnnnn}
+% 来定义一个可以删除十个（或更多）参数的函数，但这对于程序员来说是很不直观的，
+% 他们会认为这样的函数只展开一次就能处理掉所有记号。
+%    \begin{macrocode}
+\cs_set:Npn \use_none:n         #1                 { }
+\cs_set:Npn \use_none:nn        #1#2               { }
+\cs_set:Npn \use_none:nnn       #1#2#3             { }
+\cs_set:Npn \use_none:nnnn      #1#2#3#4           { }
+\cs_set:Npn \use_none:nnnnn     #1#2#3#4#5         { }
+\cs_set:Npn \use_none:nnnnnn    #1#2#3#4#5#6       { }
+\cs_set:Npn \use_none:nnnnnnn   #1#2#3#4#5#6#7     { }
+\cs_set:Npn \use_none:nnnnnnnn  #1#2#3#4#5#6#7#8   { }
+\cs_set:Npn \use_none:nnnnnnnnn #1#2#3#4#5#6#7#8#9 { }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{调试与修补以后的定义}
+%
+%    \begin{macrocode}
+%<@@=debug>
+%    \end{macrocode}
+%
+% \begin{macro}{\__kernel_if_debug:TF}
+% 一个更有意义的测试是否启用了调试，而不是弄乱“guards”。我们也可以更容易地
+% 在一个地方改变逻辑。这主要用于“deprecations”。
+%    \begin{macrocode}
+\cs_set_protected:Npn \__kernel_if_debug:TF #1#2 {#2}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\debug_on:n, \debug_off:n}
+%   存根（Stubs）。
+%    \begin{macrocode}
+\cs_set_protected:Npn \debug_on:n #1
+  {
+    \sys_load_debug: 
+    \debug_on:n {#1}
+  }
+\cs_set_protected:Npn \debug_off:n #1
+  {
+    \sys_load_debug:
+    \debug_off:n {#1}
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\debug_suspend:, \debug_resume:}
+%    \begin{macrocode}
+\cs_set_protected:Npn \debug_suspend: { }
+\cs_set_protected:Npn \debug_resume: { }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\__kernel_deprecation_code:nn}
+% \begin{variable}{\g_@@_deprecation_on_tl, \g_@@_deprecation_off_tl}
+% 一些命令最近被弃用且尚未被删除，只有当用户请求时才将这些设置为错误。
+% 这依赖于两个记号列表。
+%    \begin{macrocode}
+\cs_set_nopar:Npn \g_@@_deprecation_on_tl { }
+\cs_set_nopar:Npn \g_@@_deprecation_off_tl { }
+\cs_set_protected:Npn \__kernel_deprecation_code:nn #1#2
+  {
+    \tl_gput_right:Nn \g_@@_deprecation_on_tl {#1}
+    \tl_gput_right:Nn \g_@@_deprecation_off_tl {#2}
+  }
+%    \end{macrocode}
+% \end{variable}
+% \end{macro}
+%
+% \subsection{条件处理与定义}
+%
+%    \begin{macrocode}
+%<@@=prg>
+%    \end{macrocode}
+%
+% 在任何谓词函数(|_p|)或条件函数(|TF|等)底层都有一个内置逻辑，
+% 它在完成所有测试和处理后必须返回\TeX{}所处的状态（ \meta{state}）。
+% 因此，一个简单的用户接口可以是这样的：
+% \begin{verbatim}
+%   \if_meaning:w #1#2
+%     \prg_return_true:
+%   \else:
+%     \if_meaning:w #1#3
+%       \prg_return_true:
+%     \else:
+%       \prg_return_false:
+%     \fi:
+%   \fi:
+% \end{verbatim}
+% 通常，\TeX{}程序员不得不插入一些\cs{exp_after:wN}来确保状态值在最后一个条件
+% 完成的地方准确返回。然而，这会使代码变得晦涩起来，还得迫使\TeX{}程序员知道
+% \cs{exp_after:wN}的$2^{n}-1$规则表。为此，我们提供了更简单的接口。
+%
+% \begin{macro}[EXP]{\prg_return_true:, \prg_return_false:}
+% 这里的想法是，在遇到展开为空的\cs{exp_end:}之前，\cs{exp:w} 会完全展开等待被
+% 丢弃的\cs{else:}和\cs{fi:}。然后，代码可以在输入流中（使用\cs{use_i:nn}和
+% \cs{use_ii:nn}）留下第一个或第二个参数。
+% 这意味着所有的分支代码必须包含至少两个记号：查看实际实现的逻辑测试即可看到这一点。
+%    \begin{macrocode}
+\cs_set:Npn \prg_return_true:
+  { \exp_after:wN \use_i:nn  \exp:w }
+\cs_set:Npn \prg_return_false:
+  { \exp_after:wN \use_ii:nn \exp:w}
+%    \end{macrocode}
+%   An extended state space could be implemented by including a more
+%   elaborate function in place of \cs{use_i:nn}/\cs{use_ii:nn}. Provided
+%   two arguments are absorbed then the code would work.
+% \end{macro}
+%
+% \begin{macro}[EXP]{\@@_use_none_delimit_by_q_recursion_stop:w}
+%  函数\cs{use_none_delimit_by_q_recursion_stop:w}的“私有”版本。
+%    \begin{macrocode}
+\cs_set:Npn \@@_use_none_delimit_by_q_recursion_stop:w
+  #1 \q_@@_recursion_stop { }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \prg_set_conditional:Npnn           ,
+%     \prg_gset_conditional:Npnn          ,
+%     \prg_new_conditional:Npnn           ,
+%     \prg_set_protected_conditional:Npnn ,
+%     \prg_gset_protected_conditional:Npnn,
+%     \prg_new_protected_conditional:Npnn
+%   }
+% \begin{macro}{\@@_generate_conditional_parm:NNNpnn}
+%   The user functions for the types using parameter text from the
+%   programmer. The various functions only differ by which function is
+%   used for the assignment. For those |Npnn| type functions, we must
+%   grab the parameter text, reading everything up to a left brace
+%   before continuing. Then split the base function into name and
+%   signature, and feed \Arg{name} \Arg{signature} \meta{boolean}
+%   \Arg{set~or~new} \Arg{maybe~protected} \Arg{parameters} |{TF,...}|
+%   \Arg{code} to the auxiliary function responsible for defining all
+%   conditionals.
+%   Note that |e| stands for expandable and |p| for protected.
+%    \begin{macrocode}
+\cs_set_protected:Npn \prg_set_conditional:Npnn
+  { \@@_generate_conditional_parm:NNNpnn \cs_set:Npn e }
+\cs_set_protected:Npn \prg_gset_conditional:Npnn
+  { \@@_generate_conditional_parm:NNNpnn \cs_gset:Npn e }
+\cs_set_protected:Npn \prg_new_conditional:Npnn
+  { \@@_generate_conditional_parm:NNNpnn \cs_new:Npn e }
+\cs_set_protected:Npn \prg_set_protected_conditional:Npnn
+  { \@@_generate_conditional_parm:NNNpnn \cs_set_protected:Npn p }
+\cs_set_protected:Npn \prg_gset_protected_conditional:Npnn
+  { \@@_generate_conditional_parm:NNNpnn \cs_gset_protected:Npn p }
+\cs_set_protected:Npn \prg_new_protected_conditional:Npnn
+  { \@@_generate_conditional_parm:NNNpnn \cs_new_protected:Npn p }
+\cs_set_protected:Npn \@@_generate_conditional_parm:NNNpnn #1#2#3#4#
+  {
+    \use:e
+      {
+        \@@_generate_conditional:nnNNNnnn
+          \cs_split_function:N #3
+      }
+      #1 #2 {#4}
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \prg_set_conditional:Nnn           ,
+%     \prg_gset_conditional:Nnn          ,
+%     \prg_new_conditional:Nnn           ,
+%     \prg_set_protected_conditional:Nnn ,
+%     \prg_gset_protected_conditional:Nnn,
+%     \prg_new_protected_conditional:Nnn
+%   }
+% \begin{macro}
+%   {
+%     \@@_generate_conditional_count:NNNnn ,
+%     \@@_generate_conditional_count:nnNNNnn
+%   }
+%   The user functions for the types automatically inserting the correct
+%   parameter text based on the signature. The various functions only
+%   differ by which function is used for the assignment. Split the base
+%   function into name and signature.  The second auxiliary generates
+%   the parameter text from the number of letters in the signature.
+%   Then feed \Arg{name} \Arg{signature} \meta{boolean} \Arg{set~or~new}
+%   \Arg{maybe~protected} \Arg{parameters} |{TF,...}| \Arg{code} to the
+%   auxiliary function responsible for defining all conditionals.  If
+%   the \meta{signature} has more than $9$ letters, the definition is
+%   aborted since \TeX{} macros have at most $9$ arguments.  The
+%   erroneous case where the function name contains no colon is captured
+%   later.
+%    \begin{macrocode}
+\cs_set_protected:Npn \prg_set_conditional:Nnn
+  { \@@_generate_conditional_count:NNNnn \cs_set:Npn e }
+\cs_set_protected:Npn \prg_gset_conditional:Nnn
+  { \@@_generate_conditional_count:NNNnn \cs_set:Npn e }
+\cs_set_protected:Npn \prg_new_conditional:Nnn
+  { \@@_generate_conditional_count:NNNnn \cs_new:Npn e }
+\cs_set_protected:Npn \prg_set_protected_conditional:Nnn
+  { \@@_generate_conditional_count:NNNnn \cs_set_protected:Npn p }
+\cs_set_protected:Npn \prg_gset_protected_conditional:Nnn
+  { \@@_generate_conditional_count:NNNnn \cs_gset_protected:Npn p }
+\cs_set_protected:Npn \prg_new_protected_conditional:Nnn
+  { \@@_generate_conditional_count:NNNnn \cs_new_protected:Npn p }
+\cs_set_protected:Npn \@@_generate_conditional_count:NNNnn #1#2#3
+  {
+    \use:e
+      {
+        \@@_generate_conditional_count:nnNNNnn
+        \cs_split_function:N #3
+      }
+      #1 #2
+  }
+\cs_set_protected:Npn \@@_generate_conditional_count:nnNNNnn #1#2#3#4#5
+  {
+    \__kernel_cs_parm_from_arg_count:nnF
+      { \@@_generate_conditional:nnNNNnnn {#1} {#2} #3 #4 #5 }
+      { \tl_count:n {#2} }
+      {
+        \msg_error:nnee { kernel } { bad-number-of-arguments }
+          { \token_to_str:c { #1 : #2 } }
+          { \tl_count:n {#2} }
+        \use_none:nn
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \@@_generate_conditional:nnNNNnnn,
+%     \@@_generate_conditional:NNnnnnNw,
+%     \@@_generate_conditional_test:w,
+%     \@@_generate_conditional_fast:nw,
+%   }
+%   The workhorse here is going through a list of desired forms, \emph{i.e.},
+%   |p|, |TF|, |T| and |F|. The first three arguments come from splitting up
+%   the base form of the conditional, which gives the name, signature
+%   and a boolean to signal whether or not there was a colon in the
+%   name. In the absence of a colon, we throw an error and don't define
+%   any conditional. The fourth and fifth arguments build up the
+%   defining function.  The sixth is the parameters to use (possibly
+%   empty), the seventh is the list of forms to define, the eighth is the
+%   replacement text which we will augment when defining the forms.
+%   The use of \cs{tl_to_str:n} makes the later loop more robust.
+%
+%   A large number of our low-level conditionals look like \meta{code}
+%   \cs{prg_return_true:} \cs{else:} \cs{prg_return_false:} \cs{fi:} so
+%   we optimize this special case by calling
+%   \cs{@@_generate_conditional_fast:nw} \Arg{code}.  This passes
+%   \cs{use_i:nn} instead of \cs{use_i_ii:nnn} to functions such as
+%   \cs{@@_generate_p_form:wNNnnnnN}.
+%    \begin{macrocode}
+\cs_set_protected:Npn \@@_generate_conditional:nnNNNnnn #1#2#3#4#5#6#7#8
+  {
+    \if_meaning:w \c_false_bool #3
+      \msg_error:nne { kernel } { missing-colon }
+        { \token_to_str:c {#1} }
+      \exp_after:wN \use_none:nn
+    \fi:
+    \use:e
+      {
+        \exp_not:N \@@_generate_conditional:NNnnnnNw
+        \exp_not:n { #4 #5 {#1} {#2} {#6} }
+        \@@_generate_conditional_test:w
+          #8 \s_@@_mark
+            \@@_generate_conditional_fast:nw
+          \prg_return_true: \else: \prg_return_false: \fi: \s_@@_mark
+            \use_none:n
+        \exp_not:n { {#8} \use_i_ii:nnn }
+        \tl_to_str:n {#7}
+        \exp_not:n { , \q_@@_recursion_tail , \q_@@_recursion_stop }
+      }
+  }
+\cs_set:Npn \@@_generate_conditional_test:w
+    #1 \prg_return_true: \else: \prg_return_false: \fi: \s_@@_mark #2
+  { #2 {#1} }
+\cs_set:Npn \@@_generate_conditional_fast:nw #1#2 \exp_not:n #3
+  { \exp_not:n { {#1} \use_i:nn } }
+%    \end{macrocode}
+%   Looping through the list of desired forms.  First are six arguments
+%   and seventh is the form.  Use the form to call the
+%   correct type.  If the form does not exist, the \cs{use:c}
+%   construction results in \tn{relax}, and the error message is
+%   displayed (unless the form is empty, to allow for |{T, , F}|),
+%   then \cs{use_none:nnnnnnnn} cleans up.  Otherwise, the
+%   error message is removed by the variant form.
+%    \begin{macrocode}
+\cs_set_protected:Npn \@@_generate_conditional:NNnnnnNw #1#2#3#4#5#6#7#8 ,
+  {
+    \if_meaning:w \q_@@_recursion_tail #8
+      \exp_after:wN \@@_use_none_delimit_by_q_recursion_stop:w
+    \fi:
+    \use:c { @@_generate_ #8 _form:wNNnnnnN }
+        \tl_if_empty:nF {#8}
+          {
+            \msg_error:nnee
+              { kernel } { conditional-form-unknown }
+              {#8} { \token_to_str:c { #3 : #4 } }
+          }
+        \use_none:nnnnnnnn
+      \s_@@_stop
+      #1 #2 {#3} {#4} {#5} {#6} #7
+    \@@_generate_conditional:NNnnnnNw #1 #2 {#3} {#4} {#5} {#6} #7
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \@@_generate_p_form:wNNnnnnN,
+%     \@@_generate_TF_form:wNNnnnnN,
+%     \@@_generate_T_form:wNNnnnnN,
+%     \@@_generate_F_form:wNNnnnnN
+%   }
+% \begin{macro}[EXP]{\@@_p_true:w, \@@_T_true:w, \@@_F_true:w, \@@_TF_true:w}
+%   How to generate the various forms. Those functions take the
+%   following arguments: 1: junk, 2: \cs{cs_set:Npn} or similar, 3: |p|
+%   (for protected conditionals) or |e|, 4: function name, 5: signature,
+%   6: parameter text, 7: replacement (possibly trimmed by
+%   \cs{@@_generate_conditional_fast:nw}), 8: \cs{use_i_ii:nnn} or
+%   \cs{use_i:nn} (for \enquote{fast} conditionals).  Remember that the
+%   logic-returning functions expect two arguments to be present after
+%   \cs{exp_end:}: notice the construction of the different variants
+%   relies on this, and that the |TF| and |F| variants will be slightly
+%   faster than the |T| version.  The |p| form is only valid for
+%   expandable tests, we check for that by making sure that the second
+%   argument is empty.  For \enquote{fast} conditionals, |#7| has an
+%   extra \cs[no-index]{if_\ldots{}}.  To optimize a bit further we
+%   don't use \cs{exp_after:wN} \cs{use_ii:nnn} and similar but instead use
+%   \cs{@@_TF_true:w} and similar to swap out the macro after \cs{fi:}. It would
+%   be a tiny bit faster if we directly grabbed the |T| and |F| arguments there,
+%   but if those are actually missing, the recovery from the runaway argument
+%   would not insert \cs{fi:} back, messing up nesting of conditionals.
+%    \begin{macrocode}
+\cs_set_protected:Npn \@@_generate_p_form:wNNnnnnN
+    #1 \s_@@_stop #2#3#4#5#6#7#8
+  {
+    \if_meaning:w e #3
+      \exp_after:wN \use_i:nn
+    \else:
+      \exp_after:wN \use_ii:nn
+    \fi:
+      {
+        #8
+          { \exp_args:Nc #2 { #4 _p: #5 } #6 }
+          { { #7 \exp_end: \c_true_bool \c_false_bool } }
+          { #7 \@@_p_true:w \fi: \c_false_bool }
+      }
+      {
+        \msg_error:nne { kernel } { protected-predicate }
+          { \token_to_str:c { #4 _p: #5 } }
+      }
+  }
+\cs_set_protected:Npn \@@_generate_T_form:wNNnnnnN
+    #1 \s_@@_stop #2#3#4#5#6#7#8
+  {
+    #8
+      { \exp_args:Nc #2 { #4 : #5 T } #6 }
+      { { #7 \exp_end: \use:n \use_none:n } }
+      { #7 \@@_T_true:w \fi: \use_none:n }
+  }
+\cs_set_protected:Npn \@@_generate_F_form:wNNnnnnN
+    #1 \s_@@_stop #2#3#4#5#6#7#8
+  {
+    #8
+      { \exp_args:Nc #2 { #4 : #5 F } #6 }
+      { { #7 \exp_end: { } } }
+      { #7 \@@_F_true:w \fi: \use:n }
+  }
+\cs_set_protected:Npn \@@_generate_TF_form:wNNnnnnN
+    #1 \s_@@_stop #2#3#4#5#6#7#8
+  {
+    #8
+      { \exp_args:Nc #2 { #4 : #5 TF } #6 }
+      { { #7 \exp_end: } }
+      { #7 \@@_TF_true:w \fi: \use_ii:nn }
+  }
+\cs_set:Npn \@@_p_true:w  \fi: \c_false_bool { \fi: \c_true_bool }
+\cs_set:Npn \@@_T_true:w  \fi: \use_none:n   { \fi: \use:n }
+\cs_set:Npn \@@_F_true:w  \fi: \use:n        { \fi: \use_none:n }
+\cs_set:Npn \@@_TF_true:w \fi: \use_ii:nn    { \fi: \use_i:nn }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \prg_set_eq_conditional:NNn ,
+%     \prg_gset_eq_conditional:NNn,
+%     \prg_new_eq_conditional:NNn
+%   }
+% \begin{macro}{\@@_set_eq_conditional:NNNn}
+%   The setting-equal functions.  Split both functions and feed
+%   \Arg{name_1} \Arg{signature_1} \meta{boolean_1}
+%   \Arg{name_2} \Arg{signature_2} \meta{boolean_2}
+%   \meta{copying~function} \meta{conditions} |,| \cs{q_@@_recursion_tail}
+%   |,| \cs{q_@@_recursion_stop}
+%   to a first auxiliary.
+%    \begin{macrocode}
+\cs_set_protected:Npn \prg_set_eq_conditional:NNn
+  { \@@_set_eq_conditional:NNNn \cs_set_eq:cc }
+\cs_set_protected:Npn \prg_gset_eq_conditional:NNn
+  { \@@_set_eq_conditional:NNNn \cs_gset_eq:cc }
+\cs_set_protected:Npn \prg_new_eq_conditional:NNn
+  { \@@_set_eq_conditional:NNNn \cs_new_eq:cc }
+\cs_set_protected:Npn \@@_set_eq_conditional:NNNn #1#2#3#4
+  {
+    \use:e
+      {
+        \exp_not:N \@@_set_eq_conditional:nnNnnNNw
+          \cs_split_function:N #2
+          \cs_split_function:N #3
+          \exp_not:N #1
+          \tl_to_str:n {#4}
+          \exp_not:n { , \q_@@_recursion_tail , \q_@@_recursion_stop }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \@@_set_eq_conditional:nnNnnNNw ,
+%     \@@_set_eq_conditional_loop:nnnnNw
+%   }
+% \begin{macro}[EXP]
+%   {
+%     \@@_set_eq_conditional_p_form:nnn  ,
+%     \@@_set_eq_conditional_TF_form:nnn ,
+%     \@@_set_eq_conditional_T_form:nnn  ,
+%     \@@_set_eq_conditional_F_form:nnn  ,
+%   }
+%   Split the function to be defined, and setup a manual clist loop over
+%   argument |#6| of the first auxiliary.  The second auxiliary receives
+%   twice three arguments coming from splitting the function to be
+%   defined and the function to copy.  Make sure that both functions
+%   contained a colon, otherwise we don't know how to build
+%   conditionals, hence abort.  Call the looping macro, with arguments
+%   \Arg{name_1} \Arg{signature_1} \Arg{name_2} \Arg{signature_2}
+%   \meta{copying~function} and followed by the comma list.  At each
+%   step in the loop, make sure that the conditional form we copy is
+%   defined, and copy it, otherwise abort.
+%    \begin{macrocode}
+\cs_set_protected:Npn \@@_set_eq_conditional:nnNnnNNw #1#2#3#4#5#6
+  {
+    \if_meaning:w \c_false_bool #3
+      \msg_error:nne { kernel } { missing-colon }
+        { \token_to_str:c {#1} }
+      \exp_after:wN \@@_use_none_delimit_by_q_recursion_stop:w
+    \fi:
+    \if_meaning:w \c_false_bool #6
+      \msg_error:nne { kernel } { missing-colon }
+        { \token_to_str:c {#4} }
+      \exp_after:wN \@@_use_none_delimit_by_q_recursion_stop:w
+    \fi:
+    \@@_set_eq_conditional_loop:nnnnNw {#1} {#2} {#4} {#5}
+  }
+\cs_set_protected:Npn \@@_set_eq_conditional_loop:nnnnNw #1#2#3#4#5#6 ,
+  {
+    \if_meaning:w \q_@@_recursion_tail #6
+      \exp_after:wN \@@_use_none_delimit_by_q_recursion_stop:w
+    \fi:
+    \use:c { @@_set_eq_conditional_ #6 _form:wNnnnn }
+        \tl_if_empty:nF {#6}
+          {
+            \msg_error:nnee
+              { kernel } { conditional-form-unknown }
+              {#6} { \token_to_str:c { #1 : #2 } }
+          }
+        \use_none:nnnnnn
+      \s_@@_stop
+      #5 {#1} {#2} {#3} {#4}
+    \@@_set_eq_conditional_loop:nnnnNw {#1} {#2} {#3} {#4} #5
+  }
+\cs_set:Npn \@@_set_eq_conditional_p_form:wNnnnn #1 \s_@@_stop #2#3#4#5#6
+  { #2 { #3 _p : #4    }    { #5 _p : #6    } }
+\cs_set:Npn \@@_set_eq_conditional_TF_form:wNnnnn #1 \s_@@_stop #2#3#4#5#6
+  { #2 { #3    : #4 TF }    { #5    : #6 TF } }
+\cs_set:Npn \@@_set_eq_conditional_T_form:wNnnnn #1 \s_@@_stop #2#3#4#5#6
+  { #2 { #3    : #4 T  }    { #5    : #6 T  } }
+\cs_set:Npn \@@_set_eq_conditional_F_form:wNnnnn #1 \s_@@_stop #2#3#4#5#6
+  { #2 { #3    : #4  F }    { #5    : #6  F } }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% All that is left is to define the canonical boolean true and false.
+% I think Michael originated the idea of expandable boolean tests.  At
+% first these were supposed to expand into either \texttt{TT} or
+% \texttt{TF} to be tested using \cs{if:w} but this was later changed to
+% |00| and |01|, so they could be used in logical
+% operations. Later again they were changed to being numerical
+% constants with values of $1$ for true and $0$ for false. We need
+% this from the get-go.
+%
+% \begin{variable}{\c_true_bool, \c_false_bool}
+%    Here are the canonical boolean values.
+%    \begin{macrocode}
+\tex_chardef:D \c_true_bool  = 1 ~
+\tex_chardef:D \c_false_bool = 0 ~
+%    \end{macrocode}
+% \end{variable}
+%
+% \subsection{解析控制序列}
+%
+%    \begin{macrocode}
+%<@@=cs>
+%    \end{macrocode}
+%
+% \begin{function}{\@@_count_signature:N}
+%   \begin{syntax}
+%     \cs{@@_count_signature:N} \meta{function}
+%   \end{syntax}
+% 将\meta{function}划分为\meta{name}（即函数名，冒号前的部分）和\meta{signature}
+% （即参数说明，冒号后的部分）两部分。然后，在输入流中留下\meta{signature}中
+% 参数说明符的个数\meta{number}。如果没有\meta{signature}，则结果标记为$-1$。
+% \end{function}
+%
+% \begin{function}[EXP]{\@@_get_function_name:N}
+%   \begin{syntax}
+%     \cs{@@_get_function_name:N} \meta{function}
+%   \end{syntax}
+% 将\meta{function}划分为\meta{name}（即函数名，冒号前的部分）和\meta{signature}
+% （即参数说明，冒号后的部分）两部分。然后，在输入流中留下去除了类别码为$12$
+% （表示其他字符）的转义字符后的函数名\meta{name}。
+% \end{function}
+%
+% \begin{function}[EXP]{\@@_get_function_signature:N}
+%   \begin{syntax}
+%     \cs{@@_get_function_signature:N} \meta{function}
+%   \end{syntax}
+% 将\meta{function}划分为\meta{name}（即函数名，冒号前的部分）和\meta{signature}
+% （即参数说明，冒号后的部分）两部分。然后，在输入流中留下由类别码为 $12$ 的记号
+% 组成的\meta{signature}（参数说明）。
+% \end{function}
+%
+% \begin{function}{\@@_tmp:w}
+% 用于各种短期用途的函数，例如在定义函数时涉及到通常难以正常插入的记号
+% （空格、其他类别的字符）。
+% \end{function}
+%
+% \begin{macro}[EXP]{\cs_to_str:N}
+% \begin{macro}[EXP]{\@@_to_str:N, \@@_to_str:w}
+% 这用于将控制序列名转换为字符串，并去除前导的转义字符。
+% 这实际上是一个并不简单的问题，因为存在不同的情况：
+%   \begin{itemize}
+%     \item 通常情况下可排版的转义字符；
+%     \item 不可排版的转义字符，例如当\tn{escapechar}的值为负数时
+%           （通常会指定\tn{escapechar}$=-1$来取消转义符）；
+%     \item  转义字符是空格的情况。
+%   \end{itemize}
+% 解决这个问题的一种方法是测试 |\token_to_str:N \a| 产生的结果中有几个记号。
+% 如果有两个，则说明转义字符是可排版的；如果不可排版，则只有一个记号。
+%
+% 然而，还存在一个额外的复杂性：控制序列本身可能以一个空格开头。显然，
+% 在将其转换为字符串的过程中，这个空格不应该丢弃。因此，所采用的方法仍然有些复杂。
+% 当转义字符可排版时，\verb*|\token_to_str:N \ | 会产生转义字符本身和一个空格。
+% 二者的字符代码是不同的，因此\cs{if:w} 测试为假，\TeX{}在将后面的控制序列转换为
+% 字符串后读取\cs{@@_to_str:N}；这个辅助函数会去除转义字符，并终止初始
+% \cs{tex_romannumeral:D}的展开。
+% 第二种情况是转义字符不可排版。然后，在从\verb*|\token_to_str:N \ |读取空格后，
+% \cs{if:w}测试未完成，辅助函数 \cs{@@_to_str:w} 被展开，并将 |-| 作为测试的
+% 第二个字符；测试为假，\TeX{}跳转到\cs{fi:}，然后执行\cs{token_to_str:N}，
+% 并用\cs{c_zero_int}终止\cs{tex_romannumeral:D} 的展开。
+% 最后一种情况是转义字符本身为一个空格。在这种情况下， \cs{if:w}测试为真，
+% 辅助函数\cs{@@_to_str:w}起作用，插入|-\int_value:w|，将\cs{c_zero_int}
+% 展开为字符|0|。然后，初始的\cs{tex_romannumeral:D}看到|0|，它不是一个用于终止
+% 的数字，紧接着是转义字符，一个空格，被移除，终止了\cs{tex_romannumeral:D}的展开。
+% 在这三种情况下，\cs{cs_to_str:N} 需要两个展开步骤才能完全展开。
+%    \begin{macrocode}
+\cs_set:Npn \cs_to_str:N
+  {
+%    \end{macrocode}
+% 我们使用\cs{tex_romannumeral:D}来完成展开，并以\cs{c_zero_int}终止展开，
+% 而不是像通常那样使用\cs{exp:w}和\cs{exp_end:}。原因是代码严重依赖于以
+% \cs{c_zero_int}终止展开，因此我们明确指明了这种依赖关系。
+%    \begin{macrocode}
+    \tex_romannumeral:D
+      \if:w \token_to_str:N \ \@@_to_str:w \fi:
+      \exp_after:wN \@@_to_str:N \token_to_str:N
+  }
+\cs_set:Npn \@@_to_str:N #1 { \c_zero_int }
+\cs_set:Npn \@@_to_str:w #1 \@@_to_str:N
+  { - \int_value:w \fi: \exp_after:wN \c_zero_int }
+%    \end{macrocode}
+% 如果要提速，我们可以在\LuaTeX{}中使用\tn{csstring}。对于空的csname，
+% 该原语会给出一个空结果，而当前的\cs{cs_to_str:N}则会在所有引擎中都会给出错误的
+% 结果（在没有巨大性能损失的条件下这是不可能修复的）。
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}[EXP]{\cs_split_function:N}
+% \begin{macro}[EXP]
+%   {\@@_split_function_auxi:w, \@@_split_function_auxii:w}
+% 该函数接收一个函数名，并将其拆分为去除转义字符的名称和参数说明。除此之外，
+% 还会返回第三个参数：一个布尔值\meta{true}或\meta{false}，如果函数中有冒号，
+% 则返回\meta{true}，否则返回\meta{false} 。
+%
+% 首先，通过展开\cs{cs_to_str:N}两次来确保获取一个正确取值的字符串。如果函数包含
+% 冒号，则将（冒号前的）函数名作为辅助函数\cs{@@_split_function_auxi:w}接收的第
+% 一个参数|#1|，并以第一个冒号为界，然后（冒号后的）参数说明作为|#2|，紧跟其后的
+% \cs{s_@@_mark} 则是第二个分界点，接着是\cs{c_true_bool}作为|#3|，其后的
+% |: \s__cs_mark \c_false_bool|直至\cs{s_@@_stop}这一串作为|#4|被清理。
+% 若函数中不包含冒号，辅助函数\cs{@@_split_function_auxi:w}的|#1|包含函数名和
+% \cs{s_@@_mark} \cs{c_true_bool}，|#2|为空，|#3|是\cs{c_false_bool}，|#4|为空
+% 并被清理。
+% 
+% 第二个辅助函数\cs{@@_split_function_auxii:w}则用来提取转化为字符串
+% 后的函数名。对于第一种情况（函数中有冒号），该辅助函数的|#1|为
+% （冒号前的）函数名，|#2|为空，最终输出结果包含三部分：
+% \Arg{冒号前的函数名}\Arg{冒号后的参数说明}\cs{c_true_bool}。
+% 对于第二种情况（函数中没有冒号），该辅助函数的|#1|为\meta{函数名}（本身就没有冒号），|#2|为\cs{c_true_bool}\cs{s_@@_mark} ，最终输出结果为：\Arg{不含冒号的函数名}|{}|\cs{c_false_bool}
+%
+%    \begin{macrocode}
+\cs_set_protected:Npn \@@_tmp:w #1
+  {
+    \cs_set:Npn \cs_split_function:N ##1
+      {
+        \exp_after:wN \exp_after:wN \exp_after:wN
+        \@@_split_function_auxi:w
+          \cs_to_str:N ##1 \s_@@_mark \c_true_bool
+          #1 \s_@@_mark \c_false_bool \s_@@_stop
+      }
+    \cs_set:Npn \@@_split_function_auxi:w
+        ##1 #1 ##2 \s_@@_mark ##3##4 \s_@@_stop
+      { \@@_split_function_auxii:w ##1 \s_@@_mark \s_@@_stop {##2} ##3 }
+    \cs_set:Npn \@@_split_function_auxii:w ##1 \s_@@_mark ##2 \s_@@_stop
+      { {##1} }
+  }
+%    \end{macrocode}
+% 先将“|:|”转化为字符串再将其作为\cs{@@_tmp:w}所接收的参数。
+%    \begin{macrocode}
+\exp_after:wN \@@_tmp:w \token_to_str:N :
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{存在与否}
+%
+% 如果一个控制序列在哈希表中有记录，并且其含义与原语\tn{relax}不同，
+% 那么就说该控制序列存在（\emph{exist}）或者说被使用。
+% 如果一个控制序列尚未存在，则说它是自由的（\emph{free}）或者说待定义。
+%
+% \begin{macro}[pTF, EXP]{\cs_if_exist:N, \cs_if_exist:c}
+% 有两种检查存在性的版本。对于|N|形式，首先检查是否为\cs{scan_stop:} ，
+% 然后再检查是否在哈希表中。如果输入类似于\cs{else:} 或\cs{fi:}这样的内容，
+% 不会有问题，因为只有在被测试的记号是\cs{scan_stop:}时，\TeX{}才会跳过输入。
+%    \begin{macrocode}
+\prg_set_conditional:Npnn \cs_if_exist:N #1 { p , T , F , TF }
+  {
+    \if_meaning:w #1 \scan_stop:
+      \prg_return_false:
+    \else:
+      \if_cs_exist:N #1
+        \prg_return_true:
+      \else:
+        \prg_return_false:
+      \fi:
+    \fi:
+  }
+%    \end{macrocode}
+% 对于|c|形式，首先检查是否在哈希表中，然后再检查是否为\cs{scan_stop:} ，
+% 以免将其添加到哈希表中，除非它已经存在。在这种情况下，我们必须小心，
+% 因为如果第一个测试为假时要跳过的文本可能包含干扰扫描的记号。因此，
+% 要确保第二个测试是在第一个测试完全结束后进行的。
+%    \begin{macrocode}
+\prg_set_conditional:Npnn \cs_if_exist:c #1 { p , T , F , TF }
+  {
+    \if_cs_exist:w #1 \cs_end:
+      \exp_after:wN \use_i:nn
+    \else:
+      \exp_after:wN \use_ii:nn
+    \fi:
+    {
+      \exp_after:wN \if_meaning:w \cs:w #1 \cs_end: \scan_stop:
+        \prg_return_false:
+      \else:
+        \prg_return_true:
+      \fi:
+    }
+    \prg_return_false:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[pTF, EXP]{\cs_if_free:N, \cs_if_free:c}
+%   反转上述操作的逻辑。
+%    \begin{macrocode}
+\prg_set_conditional:Npnn \cs_if_free:N #1 { p , T , F , TF }
+  {
+    \if_meaning:w #1 \scan_stop:
+      \prg_return_true:
+    \else:
+      \if_cs_exist:N #1
+        \prg_return_false:
+      \else:
+        \prg_return_true:
+      \fi:
+    \fi:
+  }
+\prg_set_conditional:Npnn \cs_if_free:c #1 { p , T , F , TF }
+  {
+    \if_cs_exist:w #1 \cs_end:
+      \exp_after:wN \use_i:nn
+    \else:
+      \exp_after:wN \use_ii:nn
+    \fi:
+      {
+        \exp_after:wN \if_meaning:w \cs:w #1 \cs_end: \scan_stop:
+          \prg_return_true:
+        \else:
+          \prg_return_false:
+        \fi:
+      }
+      { \prg_return_true: }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[EXP,noTF,added=2011-10-10]
+%   {\cs_if_exist_use:N, \cs_if_exist_use:c}
+% \cs[index=cs_if_exist_use:N]{cs_if_exist_use:\ldots{}}函数不能作为条件语句
+% 实现，因为|true|分支必须将控制序列本身和|true|代码留在输入流中。
+% 对于\texttt{c}变体，在控制序列不存在时，我们谨慎地不将其放入哈希表中。
+% 在 \LuaTeX{}中，我们可以使用\tn{lastnamedcs}原语。
+%    \begin{macrocode}
+\cs_set:Npn \cs_if_exist_use:NTF #1#2
+  { \cs_if_exist:NTF #1 { #1 #2 } }
+\cs_set:Npn \cs_if_exist_use:NF #1
+  { \cs_if_exist:NTF #1 { #1 } }
+\cs_set:Npn \cs_if_exist_use:NT #1 #2
+  { \cs_if_exist:NTF #1 { #1 #2 } { } }
+\cs_set:Npn \cs_if_exist_use:N #1
+  { \cs_if_exist:NTF #1 { #1 } { } }
+\cs_set:Npn \cs_if_exist_use:cTF #1#2
+  { \cs_if_exist:cTF {#1} { \use:c {#1} #2 } }
+\cs_set:Npn \cs_if_exist_use:cF #1
+  { \cs_if_exist:cTF {#1} { \use:c {#1} } }
+\cs_set:Npn \cs_if_exist_use:cT #1#2
+  { \cs_if_exist:cTF {#1} { \use:c {#1} #2 } { } }
+\cs_set:Npn \cs_if_exist_use:c #1
+  { \cs_if_exist:cTF {#1} { \use:c {#1} } { } }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{创建new类定义性函数前的准备}
+%
+% 我们提供了两种用于定义控制序列的函数。一种会检查其所定义的控制序列事先是否
+% 已有定义，这类函数具有|\..._new|这样的形式；另一种则不做重复定义检查。
+%
+% 在定义|new|类函数之前，我们需要先定义一些辅助宏，用于产生报错信息。
+% 下面几个函数的定义是暂时的，后续会重新定义。
+%
+% \begin{macro}
+%   {\msg_error:nnee, \msg_error:nne, \msg_error:nn}
+% 如果在\LaTeX3加载\pkg{l3msg}模块前发生内部错误，则代码应该发出一个简洁但可用的
+% 错误消息并停止执行。只有在组内出现编码错误的情况下才会发生这种情况，所以这是一个
+% 合理的响应。设置\tn{newlinechar}是必要的，用以将|^^J|转换为 plain \TeX{} 中
+% 的换行符（line break）。
+%    \begin{macrocode}
+\cs_set_protected:Npn \msg_error:nnee #1#2#3#4
+  {
+    \tex_newlinechar:D = `\^^J \scan_stop:
+    \tex_errmessage:D
+      {
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!~! ^^J
+        Argh,~internal~LaTeX3~error! ^^J ^^J
+        Module ~ #1 , ~ message~name~"#2": ^^J
+        Arguments~'#3'~and~'#4' ^^J ^^J
+        This~is~one~for~The~LaTeX3~Project:~bailing~out
+      }
+    \tex_end:D
+  }
+\cs_set_protected:Npn \msg_error:nne #1#2#3
+  { \msg_error:nnee {#1} {#2} {#3} { } }
+\cs_set_protected:Npn \msg_error:nn #1#2
+  { \msg_error:nnee {#1} {#2} { } { } }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[rEXP]{\msg_line_context:}
+% 另一个来自\pkg{l3msg}模块的函数，后续会修改。
+%    \begin{macrocode}
+\cs_set:Npn \msg_line_context:
+  { on~line~ \tex_the:D \tex_inputlineno:D }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[documented-as=\iow_log:n]{\iow_log:e, \iow_term:e}
+%  定义一个日程函数用于将信息仅写入日志文件。再定义一个类似的函数用于将信息同时
+%  写入日志文件和终端。它们后续会在\pkg{l3file}模块中被重新定义。
+%    \begin{macrocode}
+\cs_set_protected:Npn \iow_log:e
+  { \tex_immediate:D \tex_write:D -1 }
+\cs_set_protected:Npn \iow_term:e
+  { \tex_immediate:D \tex_write:D 16 }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\__kernel_chk_if_free_cs:N, \__kernel_chk_if_free_cs:c}
+% 该命令会被\cs{cs_new_nopar:Npn}和\cs{cs_new_eq:NN}等|new|类函数调用以确保
+% 参数序列尚未被使用，若已使用则报错。它会检查\meta{csname}是否未定义或者是否等于 
+% \cs{scan_stop:}，若判断为假则报错。我们必须确保不将该参数放入条件处理中，
+% 因为它可能是一个类似于|\if...|的函数类型！
+%    \begin{macrocode}
+\cs_set_protected:Npn \__kernel_chk_if_free_cs:N #1
+  {
+    \cs_if_free:NF #1
+      {
+        \msg_error:nnee { kernel } { command-already-defined }
+          { \token_to_str:N #1 } { \token_to_meaning:N #1 }
+      }
+  }
+\cs_set_protected:Npn \__kernel_chk_if_free_cs:c
+  { \exp_args:Nc \__kernel_chk_if_free_cs:N }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{创建new类定义性函数}
+%
+%    \begin{macrocode}
+%<@@=cs>
+%    \end{macrocode}
+%
+% \begin{macro}
+%   {
+%     \cs_new_nopar:Npn           , \cs_new_nopar:Npe           , \cs_new_nopar:Npx           ,
+%     \cs_new:Npn                 , \cs_new:Npe                 , \cs_new:Npx                 ,
+%     \cs_new_protected_nopar:Npn , \cs_new_protected_nopar:Npe , \cs_new_protected_nopar:Npx ,
+%     \cs_new_protected:Npn       , \cs_new_protected:Npe       , \cs_new_protected:Npx
+%   }
+% \begin{macro}{\@@_tmp:w}
+%   该函数在定义控制序列之前会检查其是否已有定义。
+%     \begin{macrocode}
+\cs_set:Npn \@@_tmp:w #1#2
+  {
+    \cs_set_protected:Npn #1 ##1
+       {
+         \__kernel_chk_if_free_cs:N ##1
+         #2 ##1
+      }
+  }
+\@@_tmp:w \cs_new_nopar:Npn           \cs_gset_nopar:Npn
+\@@_tmp:w \cs_new_nopar:Npe           \cs_gset_nopar:Npe
+\@@_tmp:w \cs_new_nopar:Npx           \cs_gset_nopar:Npx
+\@@_tmp:w \cs_new:Npn                 \cs_gset:Npn
+\@@_tmp:w \cs_new:Npe                 \cs_gset:Npe
+\@@_tmp:w \cs_new:Npx                 \cs_gset:Npx
+\@@_tmp:w \cs_new_protected_nopar:Npn \cs_gset_protected_nopar:Npn
+\@@_tmp:w \cs_new_protected_nopar:Npe \cs_gset_protected_nopar:Npe
+\@@_tmp:w \cs_new_protected_nopar:Npx \cs_gset_protected_nopar:Npx
+\@@_tmp:w \cs_new_protected:Npn       \cs_gset_protected:Npn
+\@@_tmp:w \cs_new_protected:Npe       \cs_gset_protected:Npe
+\@@_tmp:w \cs_new_protected:Npx       \cs_gset_protected:Npx
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}[documented-as=\cs_set_nopar:Npn]
+%   {
+%     \cs_set_nopar:cpn  , \cs_set_nopar:cpe  , \cs_set_nopar:cpx  ,
+%     \cs_gset_nopar:cpn , \cs_gset_nopar:cpe , \cs_gset_nopar:cpx ,
+%     \cs_new_nopar:cpn  , \cs_new_nopar:cpe  , \cs_new_nopar:cpx
+%   }
+%  类似于\cs{cs_set_nopar:Npn}和\cs{cs_new_nopar:Npn}，不同之处在于第一个参数
+%  由用于形成所需控制序列的名称的字符序列组成（|c|代表csname参数，
+%  详见\pkg{l3expan}模块）。这里还提供了全局性版本。
+%
+%  举个例子，\cs{cs_set_nopar:cpn}\meta{string}\meta{rep-text}会先将\meta{string}
+% 变为一个csname，然后再按\cs{cs_set_nopar:Npn}的方法处理\meta{rep-text}。
+%    \begin{macrocode}
+\cs_set:Npn \@@_tmp:w #1#2
+  { \cs_new_protected_nopar:Npn #1 { \exp_args:Nc #2 } }
+\@@_tmp:w \cs_set_nopar:cpn  \cs_set_nopar:Npn
+\@@_tmp:w \cs_set_nopar:cpe  \cs_set_nopar:Npe
+\@@_tmp:w \cs_set_nopar:cpx  \cs_set_nopar:Npx
+\@@_tmp:w \cs_gset_nopar:cpn \cs_gset_nopar:Npn
+\@@_tmp:w \cs_gset_nopar:cpe \cs_gset_nopar:Npe
+\@@_tmp:w \cs_gset_nopar:cpx \cs_gset_nopar:Npx
+\@@_tmp:w \cs_new_nopar:cpn  \cs_new_nopar:Npn
+\@@_tmp:w \cs_new_nopar:cpe  \cs_new_nopar:Npe
+\@@_tmp:w \cs_new_nopar:cpx  \cs_new_nopar:Npx
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[documented-as=\cs_set:Npn]
+%   {
+%     \cs_set:cpn  , \cs_set:cpe  , \cs_set:cpx  ,
+%     \cs_gset:cpn , \cs_gset:cpe , \cs_gset:cpx ,
+%     \cs_new:cpn  , \cs_new:cpe  , \cs_new:cpx
+%   }
+% \cs{cs_set:Npn}的变体版本，它将其接收的第一个参数变为csname
+% (由控制序列名构成的控制序列)。同样还包括全局性的版本。
+%    \begin{macrocode}
+\@@_tmp:w \cs_set:cpn  \cs_set:Npn
+\@@_tmp:w \cs_set:cpe  \cs_set:Npe
+\@@_tmp:w \cs_set:cpx  \cs_set:Npx
+\@@_tmp:w \cs_gset:cpn \cs_gset:Npn
+\@@_tmp:w \cs_gset:cpe \cs_gset:Npe
+\@@_tmp:w \cs_gset:cpx \cs_gset:Npx
+\@@_tmp:w \cs_new:cpn  \cs_new:Npn
+\@@_tmp:w \cs_new:cpe  \cs_new:Npe
+\@@_tmp:w \cs_new:cpx  \cs_new:Npx
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[documented-as=\cs_set_protected_nopar:Npn]
+%   {
+%     \cs_set_protected_nopar:cpn  , \cs_set_protected_nopar:cpe  , \cs_set_protected_nopar:cpx  ,
+%     \cs_gset_protected_nopar:cpn , \cs_gset_protected_nopar:cpe , \cs_gset_protected_nopar:cpx ,
+%     \cs_new_protected_nopar:cpn  , \cs_new_protected_nopar:cpe  , \cs_new_protected_nopar:cpx
+%   }
+% \cs{cs_set_protected_nopar:Npn}的变体版本，它将其接收的第一个参数变为csname。
+% 同样也包括全局性的版本。
+%    \begin{macrocode}
+\@@_tmp:w \cs_set_protected_nopar:cpn  \cs_set_protected_nopar:Npn
+\@@_tmp:w \cs_set_protected_nopar:cpe  \cs_set_protected_nopar:Npe
+\@@_tmp:w \cs_set_protected_nopar:cpx  \cs_set_protected_nopar:Npx
+\@@_tmp:w \cs_gset_protected_nopar:cpn \cs_gset_protected_nopar:Npn
+\@@_tmp:w \cs_gset_protected_nopar:cpe \cs_gset_protected_nopar:Npe
+\@@_tmp:w \cs_gset_protected_nopar:cpx \cs_gset_protected_nopar:Npx
+\@@_tmp:w \cs_new_protected_nopar:cpn  \cs_new_protected_nopar:Npn
+\@@_tmp:w \cs_new_protected_nopar:cpe  \cs_new_protected_nopar:Npe
+\@@_tmp:w \cs_new_protected_nopar:cpx  \cs_new_protected_nopar:Npx
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[documented-as=\cs_set_protected:Npn]
+%   {
+%     \cs_set_protected:cpn  , \cs_set_protected:cpe  , \cs_set_protected:cpx  ,
+%     \cs_gset_protected:cpn , \cs_gset_protected:cpe , \cs_gset_protected:cpx , 
+%     \cs_new_protected:cpn  , \cs_new_protected:cpe  , \cs_new_protected:cpx
+%   }
+% \cs{cs_set_protected:Npn} 的变体版本，它将其接收的第一个参数变为csname。
+% 同样也包括全局性的版本。
+%    \begin{macrocode}
+\@@_tmp:w \cs_set_protected:cpn  \cs_set_protected:Npn
+\@@_tmp:w \cs_set_protected:cpe  \cs_set_protected:Npe
+\@@_tmp:w \cs_set_protected:cpx  \cs_set_protected:Npx
+\@@_tmp:w \cs_gset_protected:cpn \cs_gset_protected:Npn
+\@@_tmp:w \cs_gset_protected:cpe \cs_gset_protected:Npe
+\@@_tmp:w \cs_gset_protected:cpx \cs_gset_protected:Npx
+\@@_tmp:w \cs_new_protected:cpn  \cs_new_protected:Npn
+\@@_tmp:w \cs_new_protected:cpe  \cs_new_protected:Npe
+\@@_tmp:w \cs_new_protected:cpx  \cs_new_protected:Npx
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{复制定义}
+%
+% \begin{macro}
+%   {
+%     \cs_set_eq:NN  , \cs_set_eq:cN  , \cs_set_eq:Nc  , \cs_set_eq:cc  ,
+%     \cs_gset_eq:NN , \cs_gset_eq:cN , \cs_gset_eq:Nc , \cs_gset_eq:cc ,
+%     \cs_new_eq:NN  , \cs_new_eq:cN  , \cs_new_eq:Nc  , \cs_new_eq:cc
+%   }
+% 这些宏允许我们将一个控制序列的定义复制给另一个控制序列。
+%
+% 等号“|=|”允许我们使用此函数定义一些有趣的字符标记，比如|=|自身或\verb*| |。
+% 要让|\c_space_char(~)|起作用，需要把|~|放在|=|后面。
+%
+% \cs{cs_set_eq:NN}是|long|类型函数，它能正确处理其参数中包含\cs{par}的情况。
+% 而\cs{cs_new_eq:NN}可能永远不会正确处理其第一个参数是\tn{par}的情况，将其定义
+% 为|long|类型是为了给出“已定义”错误而非\enquote{runaway argument}。
+%    \begin{macrocode}
+\cs_new_protected:Npn \cs_set_eq:NN #1 { \tex_let:D #1 =~ }
+\cs_new_protected:Npn \cs_set_eq:cN { \exp_args:Nc  \cs_set_eq:NN }
+\cs_new_protected:Npn \cs_set_eq:Nc { \exp_args:NNc \cs_set_eq:NN }
+\cs_new_protected:Npn \cs_set_eq:cc { \exp_args:Ncc \cs_set_eq:NN }
+\cs_new_protected:Npn \cs_gset_eq:NN { \tex_global:D  \cs_set_eq:NN }
+\cs_new_protected:Npn \cs_gset_eq:Nc { \exp_args:NNc  \cs_gset_eq:NN }
+\cs_new_protected:Npn \cs_gset_eq:cN { \exp_args:Nc   \cs_gset_eq:NN }
+\cs_new_protected:Npn \cs_gset_eq:cc { \exp_args:Ncc  \cs_gset_eq:NN }
+\cs_new_protected:Npn \cs_new_eq:NN #1
+  {
+    \__kernel_chk_if_free_cs:N #1
+    \tex_global:D \cs_set_eq:NN #1
+  }
+\cs_new_protected:Npn \cs_new_eq:cN { \exp_args:Nc  \cs_new_eq:NN }
+\cs_new_protected:Npn \cs_new_eq:Nc { \exp_args:NNc \cs_new_eq:NN }
+\cs_new_protected:Npn \cs_new_eq:cc { \exp_args:Ncc \cs_new_eq:NN }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{使函数未定义}
+%
+% \begin{macro}{\cs_undefine:N, \cs_undefine:c}
+% 以下函数用于释放主内存中不再使用的某些函数的定义。对于\texttt{c}变体，
+% 如果控制序列尚未存在，则小心地避免将其添加到哈希表中，并且还会避免在此情况下
+% 嵌套\TeX{}条件语句，以防|#1|不平衡。
+%    \begin{macrocode}
+\cs_new_protected:Npn \cs_undefine:N #1
+  { \cs_gset_eq:NN #1 \tex_undefined:D }
+\cs_new_protected:Npn \cs_undefine:c #1
+  {
+    \if_cs_exist:w #1 \cs_end:
+      \exp_after:wN \use:n
+    \else:
+      \exp_after:wN \use_none:n
+    \fi:
+    { \cs_gset_eq:cN {#1} \tex_undefined:D }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{根据参数计数生成参数文本}
+%
+%    \begin{macrocode}
+%<@@=cs>
+%    \end{macrocode}
+%
+% \begin{macro}{\__kernel_cs_parm_from_arg_count:nnF}
+% \begin{macro}{\@@_parm_from_arg_count_test:nnF}
+% \LaTeX3提供了使用简单参数文本来定义控制序列和条件的简写方式，参数数量（0到9个）
+% 可以从函数的\meta{参数说明}中获取或更一般地直接给出。下述函数的展开结果为：所接收
+% 的第一个参数不变，其后则是一个包含参数文本|{#|$1$\ldots{}|#|$n$|}|的大括号组，
+% 其中|n|是对第二个参数使用\cs{int_eval:n}求值得到的结果。如果第二个参数的结果超出
+% 了$[0,9]$的范围，则返回第三个参数，通常是一个报错消息。
+% 这里使用的一些函数尚未定义，但会在调用此函数之前定义。
+%    \begin{macrocode}
+\cs_set_protected:Npn \__kernel_cs_parm_from_arg_count:nnF #1#2
+  {
+    \exp_args:Ne \@@_parm_from_arg_count_test:nnF
+      {
+        \exp_after:wN \exp_not:n
+        \if_case:w \int_eval:n {#2}
+             { }
+        \or: { ##1 }
+        \or: { ##1##2 }
+        \or: { ##1##2##3 }
+        \or: { ##1##2##3##4 }
+        \or: { ##1##2##3##4##5 }
+        \or: { ##1##2##3##4##5##6 }
+        \or: { ##1##2##3##4##5##6##7 }
+        \or: { ##1##2##3##4##5##6##7##8 }
+        \or: { ##1##2##3##4##5##6##7##8##9 }
+        \else: { \c_false_bool }
+        \fi:
+      }
+      {#1}
+  }
+\cs_set_protected:Npn \@@_parm_from_arg_count_test:nnF #1#2
+  {
+    \if_meaning:w \c_false_bool #1
+      \exp_after:wN \use_ii:nn
+    \else:
+      \exp_after:wN \use_i:nn
+    \fi:
+    { #2 {#1} }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{用给定的参数数量定义函数}
+%
+%    \begin{macrocode}
+%<@@=cs>
+%    \end{macrocode}
+%
+% \begin{macro}[EXP]{\@@_count_signature:N, \@@_count_signature:c}
+% \begin{macro}[EXP]{\@@_count_signature:n}
+% \begin{macro}[EXP]{\@@_count_signature:nnN}
+% 计算函数中\emph{参数说明符}的数量，即函数应该接收的参数数量。由于它不会在
+% 任何“时间关键（time-critical）型”函数中使用，因此如果有\meta{参数说明}，
+% 我们可以简单地使用\cs{tl_count:n} 进行计数，否则使用$-1$来表示错误。
+%    \begin{macrocode}
+\cs_new:Npn \@@_count_signature:N #1
+  { \exp_args:Nf \@@_count_signature:n { \cs_split_function:N #1 } }
+\cs_new:Npn \@@_count_signature:n #1
+  { \int_eval:n { \@@_count_signature:nnN #1 } }
+\cs_new:Npn \@@_count_signature:nnN #1#2#3
+  {
+    \if_meaning:w \c_true_bool #3
+      \tl_count:n {#2}
+    \else:
+      -1
+    \fi:
+  }
+%    \end{macrocode}
+% 函数\cs{@@_count_signature:N}的|c|变体 。
+%    \begin{macrocode}
+\cs_new:Npn \@@_count_signature:c
+  { \exp_args:Nc \@@_count_signature:N }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}
+%   {
+%     \cs_generate_from_arg_count:NNnn,
+%     \cs_generate_from_arg_count:cNnn,
+%     \cs_generate_from_arg_count:Ncnn
+%   }
+% 我们提供一个构造函数来定义具有给定参数数量的函数。为此，我们需要选择正确的参数
+% 文本，然后在定义函数时使用它。由于\TeX{}支持零到九个参数，故我们使用一个简单
+% 的判断来选择正确的参数文本，并在条件完成后返回结果。如果参数数量不在零到九之间，
+% 则报错。
+% \begin{arguments}
+%   \item 想要定义的函数；
+%   \item 用来定义函数的定义类函数；
+%   \item 函数所需的参数数量；
+%   \item 函数的具体定义（或称为替换文本：replacement text）。
+% \end{arguments}
+%    \begin{macrocode}
+\cs_new_protected:Npn \cs_generate_from_arg_count:NNnn #1#2#3#4
+  {
+    \__kernel_cs_parm_from_arg_count:nnF { \use:nnn #2 #1 } {#3}
+      {
+        \msg_error:nnee { kernel } { bad-number-of-arguments }
+          { \token_to_str:N #1 } { \int_eval:n {#3} }
+        \use_none:n
+      }
+      {#4}
+  }
+%    \end{macrocode}
+% 我们需要立即提供一个变体形式，以及一个在其他地方使用但逻辑上最适合在这里创建的形式。
+%    \begin{macrocode}
+\cs_new_protected:Npn \cs_generate_from_arg_count:cNnn
+  { \exp_args:Nc \cs_generate_from_arg_count:NNnn }
+\cs_new_protected:Npn \cs_generate_from_arg_count:Ncnn
+  { \exp_args:NNc \cs_generate_from_arg_count:NNnn }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{使用参数说明来定义函数}
+%
+%    \begin{macrocode}
+%<@@=cs>
+%    \end{macrocode}
+%
+% 现在我们可以结合已有有的一些工具，提供一个简单的接口来定义函数，其中参数的数量会从
+% 参数说明中读取。例如，|\cs_set:Nn \foo_bar:nn {#1,#2}|，|nn|表示接收两个参数。
+%
+% \begin{macro}
+%   {
+%     \cs_set:Nn                  , \cs_set:Ne                  , \cs_set:Nx                  ,
+%     \cs_set_nopar:Nn            , \cs_set_nopar:Ne            , \cs_set_nopar:Nx            ,
+%     \cs_set_protected:Nn        , \cs_set_protected:Ne        , \cs_set_protected:Nx        ,
+%     \cs_set_protected_nopar:Nn  , \cs_set_protected_nopar:Ne  , \cs_set_protected_nopar:Nx  ,
+%     \cs_gset:Nn                 , \cs_gset:Ne                 , \cs_gset:Nx                 ,
+%     \cs_gset_nopar:Nn           , \cs_gset_nopar:Ne           , \cs_gset_nopar:Nx           ,
+%     \cs_gset_protected:Nn       , \cs_gset_protected:Ne       , \cs_gset_protected:Nx       ,
+%     \cs_gset_protected_nopar:Nn , \cs_gset_protected_nopar:Ne , \cs_gset_protected_nopar:Nx ,
+%     \cs_new:Nn                  , \cs_new:Ne                  , \cs_new:Nx                  ,
+%     \cs_new_nopar:Nn            , \cs_new_nopar:Ne            , \cs_new_nopar:Nx            ,
+%     \cs_new_protected:Nn        , \cs_new_protected:Ne        , \cs_new_protected:Nx        ,
+%     \cs_new_protected_nopar:Nn  , \cs_new_protected_nopar:Ne  , \cs_new_protected_nopar:Nx  ,
+%   }
+%   我们可以这样定义\cs{cs_set:Nn}，如下：
+%   \begin{verbatim}
+%     \cs_set_protected:Npn \cs_set:Nn #1#2
+%       {
+%         \cs_generate_from_arg_count:NNnn #1 \cs_set:Npn
+%           { \__cs_count_signature:N #1 } {#2}
+%       }
+%   \end{verbatim}
+% 简而言之，要定义\cs{cs_set:Nn} ，我们只需对应使用\cs{cs_set:Npn}即可，
+% 其他方面对于每个变体来说都是相同的。因此，我们可以通过临时定义一个函数来简化
+% 这个过程，让它为我们完成这个任务。
+%    \begin{macrocode}
+\cs_set:Npn \@@_tmp:w #1#2#3
+  {
+    \cs_new_protected:cpx { cs_ #1 : #2 }
+      {
+        \exp_not:N \@@_generate_from_signature:NNn
+        \exp_after:wN \exp_not:N \cs:w cs_ #1 : #3 \cs_end:
+      }
+  }
+%    \end{macrocode}
+% \begin{macro}{\@@_generate_from_signature:NNn}
+% \begin{arguments}
+%   \item 参数说明符为|Npn|之类的定义类函数；
+%   \item 想要定义的函数。
+% \end{arguments}
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_generate_from_signature:NNn #1#2
+  {
+    \use:e
+      {
+        \@@_generate_from_signature:nnNNNn
+        \cs_split_function:N #2
+      }
+      #1 #2
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@@_generate_from_signature:nnNNNn}
+% \begin{arguments}
+%   \item 想要定义的函数的\meta{模块}|_|\meta{描述}；
+%   \item 想要定义的函数的\meta{参数说明}；
+%   \item \cs{c_true_bool}或\cs{c_false_bool}；
+%   \item 参数说明符为|Npn|之类的定义类函数；
+%   \item 想要定义的函数；
+%   \item 函数的具体定义。
+% \end{arguments}
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_generate_from_signature:nnNNNn #1#2#3#4#5#6
+  {
+    \bool_if:NTF #3
+      {
+        \cs_set_nopar:Npx \@@_tmp:w
+          { \tl_map_function:nN {#2} \@@_generate_from_signature:n }
+        \tl_if_empty:oF \@@_tmp:w
+          {
+            \msg_error:nneee { kernel } { non-base-function }
+              { \token_to_str:N #5 } {#2} { \@@_tmp:w }
+          }
+        \cs_generate_from_arg_count:NNnn
+          #5 #4 { \tl_count:n {#2} } {#6}
+      }
+      {
+        \msg_error:nne { kernel } { missing-colon }
+          { \token_to_str:N #5 }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% 参数说明符只能为N、n、T、F
+%    \begin{macrocode}
+\cs_new:Npn \@@_generate_from_signature:n #1
+  {
+    \if:w n #1 \else: \if:w N #1 \else:
+    \if:w T #1 \else: \if:w F #1 \else: #1 \fi: \fi: \fi: \fi:
+  }
+%    \end{macrocode}
+% 然后定义以|N|开头的定义类函数及其变体。
+%    \begin{macrocode}
+\@@_tmp:w { set }                  { Nn } { Npn }
+\@@_tmp:w { set }                  { Ne } { Npe }
+\@@_tmp:w { set }                  { Nx } { Npx }
+\@@_tmp:w { set_nopar }            { Nn } { Npn }
+\@@_tmp:w { set_nopar }            { Ne } { Npe }
+\@@_tmp:w { set_nopar }            { Nx } { Npx }
+\@@_tmp:w { set_protected }        { Nn } { Npn }
+\@@_tmp:w { set_protected }        { Ne } { Npe }
+\@@_tmp:w { set_protected }        { Nx } { Npx }
+\@@_tmp:w { set_protected_nopar }  { Nn } { Npn }
+\@@_tmp:w { set_protected_nopar }  { Ne } { Npe }
+\@@_tmp:w { set_protected_nopar }  { Nx } { Npx }
+\@@_tmp:w { gset }                 { Nn } { Npn }
+\@@_tmp:w { gset }                 { Ne } { Npe }
+\@@_tmp:w { gset }                 { Nx } { Npx }
+\@@_tmp:w { gset_nopar }           { Nn } { Npn }
+\@@_tmp:w { gset_nopar }           { Ne } { Npe }
+\@@_tmp:w { gset_nopar }           { Nx } { Npx }
+\@@_tmp:w { gset_protected }       { Nn } { Npn }
+\@@_tmp:w { gset_protected }       { Ne } { Npe }
+\@@_tmp:w { gset_protected }       { Nx } { Npx }
+\@@_tmp:w { gset_protected_nopar } { Nn } { Npn }
+\@@_tmp:w { gset_protected_nopar } { Ne } { Npe }
+\@@_tmp:w { gset_protected_nopar } { Nx } { Npx }
+\@@_tmp:w { new }                  { Nn } { Npn }
+\@@_tmp:w { new }                  { Ne } { Npe }
+\@@_tmp:w { new }                  { Nx } { Npx }
+\@@_tmp:w { new_nopar }            { Nn } { Npn }
+\@@_tmp:w { new_nopar }            { Ne } { Npe }
+\@@_tmp:w { new_nopar }            { Nx } { Npx }
+\@@_tmp:w { new_protected }        { Nn } { Npn }
+\@@_tmp:w { new_protected }        { Ne } { Npe }
+\@@_tmp:w { new_protected }        { Nx } { Npx }
+\@@_tmp:w { new_protected_nopar }  { Nn } { Npn }
+\@@_tmp:w { new_protected_nopar }  { Ne } { Npe }
+\@@_tmp:w { new_protected_nopar }  { Nx } { Npx }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[documented-as=\cs_set:Nn]
+%   {
+%     \cs_set:cn                  , \cs_set:ce                  , \cs_set:cx                  ,
+%     \cs_set_nopar:cn            , \cs_set_nopar:ce            , \cs_set_nopar:cx            ,
+%     \cs_set_protected:cn        , \cs_set_protected:ce        , \cs_set_protected:cx        ,
+%     \cs_set_protected_nopar:cn  , \cs_set_protected_nopar:ce  , \cs_set_protected_nopar:cx  ,
+%     \cs_gset:cn                 , \cs_gset:ce                 , \cs_gset:cx                 ,
+%     \cs_gset_nopar:cn           , \cs_gset_nopar:ce           , \cs_gset_nopar:cx           ,
+%     \cs_gset_protected:cn       , \cs_gset_protected:ce       , \cs_gset_protected:cx       ,
+%     \cs_gset_protected_nopar:cn , \cs_gset_protected_nopar:ce , \cs_gset_protected_nopar:cx ,
+%     \cs_new:cn                  , \cs_new:ce                  , \cs_new:cx                  ,
+%     \cs_new_nopar:cn            , \cs_new_nopar:ce            , \cs_new_nopar:cx            ,
+%     \cs_new_protected:cn        , \cs_new_protected:ce        , \cs_new_protected:cx        ,
+%     \cs_new_protected_nopar:cn  , \cs_new_protected_nopar:ce  , \cs_new_protected_nopar:cx  ,
+%   }
+% 使用\cs{exp_args:Nc}完成对|N|的|c|变体的定义。
+%    \begin{macrocode}
+\cs_set:Npn \@@_tmp:w #1#2
+  {
+    \cs_new_protected:cpx { cs_ #1 : c #2 }
+      {
+        \exp_not:N \exp_args:Nc
+        \exp_after:wN \exp_not:N \cs:w cs_ #1 : N #2 \cs_end:
+      }
+  }
+\@@_tmp:w { set }                  { n }
+\@@_tmp:w { set }                  { e }
+\@@_tmp:w { set }                  { x }
+\@@_tmp:w { set_nopar }            { n }
+\@@_tmp:w { set_nopar }            { e }
+\@@_tmp:w { set_nopar }            { x }
+\@@_tmp:w { set_protected }        { n }
+\@@_tmp:w { set_protected }        { e }
+\@@_tmp:w { set_protected }        { x }
+\@@_tmp:w { set_protected_nopar }  { n }
+\@@_tmp:w { set_protected_nopar }  { e }
+\@@_tmp:w { set_protected_nopar }  { x }
+\@@_tmp:w { gset }                 { n }
+\@@_tmp:w { gset }                 { e }
+\@@_tmp:w { gset }                 { x }
+\@@_tmp:w { gset_nopar }           { n }
+\@@_tmp:w { gset_nopar }           { e }
+\@@_tmp:w { gset_nopar }           { x }
+\@@_tmp:w { gset_protected }       { n }
+\@@_tmp:w { gset_protected }       { e }
+\@@_tmp:w { gset_protected }       { x }
+\@@_tmp:w { gset_protected_nopar } { n }
+\@@_tmp:w { gset_protected_nopar } { e }
+\@@_tmp:w { gset_protected_nopar } { x }
+\@@_tmp:w { new }                  { n }
+\@@_tmp:w { new }                  { e }
+\@@_tmp:w { new }                  { x }
+\@@_tmp:w { new_nopar }            { n }
+\@@_tmp:w { new_nopar }            { e }
+\@@_tmp:w { new_nopar }            { x }
+\@@_tmp:w { new_protected }        { n }
+\@@_tmp:w { new_protected }        { e }
+\@@_tmp:w { new_protected }        { x }
+\@@_tmp:w { new_protected_nopar }  { n }
+\@@_tmp:w { new_protected_nopar }  { e }
+\@@_tmp:w { new_protected_nopar }  { x }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{检查控制序列相等性}
+%
+% \begin{macro}[pTF, EXP]
+%   {\cs_if_eq:NN, \cs_if_eq:cN, \cs_if_eq:Nc, \cs_if_eq:cc}
+%   检查两个控制序列是否相同。
+%    \begin{macrocode}
+\prg_new_conditional:Npnn \cs_if_eq:NN #1#2 { p , T , F , TF }
+  {
+    \if_meaning:w #1#2
+      \prg_return_true: \else: \prg_return_false: \fi:
+  }
+\cs_new:Npn \cs_if_eq_p:cN { \exp_args:Nc  \cs_if_eq_p:NN }
+\cs_new:Npn \cs_if_eq:cNTF { \exp_args:Nc  \cs_if_eq:NNTF }
+\cs_new:Npn \cs_if_eq:cNT  { \exp_args:Nc  \cs_if_eq:NNT }
+\cs_new:Npn \cs_if_eq:cNF  { \exp_args:Nc  \cs_if_eq:NNF }
+\cs_new:Npn \cs_if_eq_p:Nc { \exp_args:NNc \cs_if_eq_p:NN }
+\cs_new:Npn \cs_if_eq:NcTF { \exp_args:NNc \cs_if_eq:NNTF }
+\cs_new:Npn \cs_if_eq:NcT  { \exp_args:NNc \cs_if_eq:NNT }
+\cs_new:Npn \cs_if_eq:NcF  { \exp_args:NNc \cs_if_eq:NNF }
+\cs_new:Npn \cs_if_eq_p:cc { \exp_args:Ncc \cs_if_eq_p:NN }
+\cs_new:Npn \cs_if_eq:ccTF { \exp_args:Ncc \cs_if_eq:NNTF }
+\cs_new:Npn \cs_if_eq:ccT  { \exp_args:Ncc \cs_if_eq:NNT }
+\cs_new:Npn \cs_if_eq:ccF  { \exp_args:Ncc \cs_if_eq:NNF }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{诊断函数}
+%
+%    \begin{macrocode}
+%<@@=kernel>
+%    \end{macrocode}
+%
+% \begin{macro}{\@@_chk_defined:NT}
+% 如果未定义变量|#1|，则报错。
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_chk_defined:NT #1#2
+  {
+    \cs_if_exist:NTF #1
+      {#2}
+      {
+        \msg_error:nne { kernel } { variable-not-defined }
+          { \token_to_str:N #1 }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}
+%   {\@@_register_show:N, \@@_register_show:c, \@@_register_log:N, \@@_register_log:c}
+% \begin{macro}{\@@_register_show_aux:NN, \@@_register_show_aux:nNN}
+% 简单地使用 \tn{showthe} 原语不允许自动换行，因此可以使用 \cs{tl_show:n} 和 
+% \cs{tl_log:n}（定义在\pkg{l3tl}模块中并会执行换行）。这将显示  
+% |>~|\meta{variable}|=|\meta{value}。在此之前，我们先展开值，否则由于换行代码
+% 而改变的某些整数（如 \tn{currentgrouplevel} 或  \tn{currentgrouptype}）
+% 将会导致显示错误的值。
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_register_show:N
+  { \@@_register_show_aux:NN \tl_show:n }
+\cs_new_protected:Npn \@@_register_show:c
+  { \exp_args:Nc \@@_register_show:N }
+\cs_new_protected:Npn \@@_register_log:N
+  { \@@_register_show_aux:NN \tl_log:n }
+\cs_new_protected:Npn \@@_register_log:c
+  { \exp_args:Nc \@@_register_log:N }
+%    \end{macrocode}
+% 辅助函数\cs{@@_register_show_aux:NN}各参数含义如下：
+% \begin{arguments}
+%   \item \cs{tl_show:n}或\cs{tl_log:n} ；
+%   \item 一个函数。
+% \end{arguments}
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_register_show_aux:NN #1#2
+  {
+    \@@_chk_defined:NT #2
+      {
+        \exp_args:No \@@_register_show_aux:nNN
+          { \tex_the:D #2 } #2 #1
+      }
+  }
+%    \end{macrocode}
+% 辅助函数\cs{@@_register_show_aux:nNN}各参数含义如下：
+% \begin{arguments}
+%   \item \cs{tex_the:D}~\meta{函数}；
+%   \item 函数；
+%   \item \cs{tl_show:n} 或 \cs{tl_log:n} 。
+% \end{arguments}
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_register_show_aux:nNN #1#2#3
+  { \exp_args:No #3 { \token_to_str:N #2 = #1 } }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\cs_show:N, \cs_show:c, \cs_log:N, \cs_log:c, \@@_show:NN}
+% 一些控制序列的名称或定义非常长。因此，简单地使用\TeX{}的原语\tn{show}可能导致
+% 一行过长。下述函数在某种程度上就是在模仿这个原语的输出，然后重构的字符串被传递给
+% \cs{tl_show:n} 或 \cs{tl_log:n} 以进行换行处理。在将定义传递给换行代码之前，
+% 必须先展开它，否则会错误地看到那里的定义。为了获得正确的转义字符，
+% 需在一个分组中设置\tn{escapechar}；这也将使e-型展开执行的赋值局部化。
+% \cs{cs_show:c} 和 \cs{cs_log:c} 将它们的参数转换为一个控制序列，并放置在一个
+% 分组中，以避免对未定义的控制序列显示\tn{relax}。
+%    \begin{macrocode}
+\cs_new_protected:Npn \cs_show:N { \@@_show:NN \tl_show:n }
+\cs_new_protected:Npn \cs_show:c
+  { \group_begin: \exp_args:NNc \group_end: \cs_show:N }
+\cs_new_protected:Npn \cs_log:N { \@@_show:NN \tl_log:n }
+\cs_new_protected:Npn \cs_log:c
+  { \group_begin: \exp_args:NNc \group_end: \cs_log:N }
+%    \end{macrocode}
+% 辅助函数\cs{@@_show:NN}各参数含义如下：
+% \begin{arguments}
+%   \item \cs{tl_show:n}或\cs{tl_log:n} ；
+%   \item 一个函数。
+% \end{arguments}
+%    \begin{macrocode}
+\cs_new_protected:Npn \@@_show:NN #1#2
+  {
+    \group_begin:
+      \int_set:Nn \tex_escapechar:D { `\\ }
+      \exp_args:NNe
+    \group_end:
+    #1 { \token_to_str:N #2 = \cs_meaning:N #2 }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\group_show_list:, \group_log_list:, \@@_group_show:NN}
+% 封装原语\tn{showgroups}。通过修改交互模式，使\TeX{}在不中断运行的情况下将结果写入日志。
+%    \begin{macrocode}
+\cs_new_protected:Npn \group_show_list:
+  { \@@_group_show:NN \use_none:n 1 }
+\cs_new_protected:Npn \group_log_list:
+  { \@@_group_show:NN \int_zero:N 0 }
+\cs_new_protected:Npn \@@_group_show:NN #1#2
+  {
+    \use:e
+      {
+        #1 \tex_interactionmode:D
+        \int_set:Nn \tex_tracingonline:D  {#2}
+        \int_set:Nn \tex_errorcontextlines:D { -1 }
+        \exp_not:N \exp_after:wN \scan_stop:
+        \tex_showgroups:D
+        \int_set:Nn \tex_interactionmode:D
+          { \int_use:N \tex_interactionmode:D }
+        \int_set:Nn \tex_tracingonline:D
+          { \int_use:N \tex_tracingonline:D }
+        \int_set:Nn \tex_errorcontextlines:D
+          { \int_use:N \tex_errorcontextlines:D }
+      }
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{分解宏定义}
+%
+% \begin{macro}{\cs_prefix_spec:N}
+% \begin{macro}{\cs_parameter_spec:N}
+% \begin{macro}{\cs_replacement_spec:N}
+% \begin{macro}{\@@_prefix_arg_replacement:wN}
+% 我们有时候想测试一个控制序列是否可以展开以显示隐藏值。然而，我们不能盲目地展开宏，
+% 因为它可能有参数，也可能没有任何参数。因此，我们定义了下面这些函数，用于从宏中提取
+% 前缀、参数说明或替换文本。所有这些信息都以类别码为$12$的字符串返回。
+% 如果所讨论的记号不是宏，则返回\cs{scan_stop:}。
+%    \begin{macrocode}
+\use:e
+  {
+    \exp_not:n { \cs_new:Npn \@@_prefix_arg_replacement:wN #1 }
+    \tl_to_str:n { macro : } \exp_not:n { #2 -> #3 \s_@@_stop #4 }
+  }
+  { #4 {#1} {#2} {#3} }
+\cs_new:Npn \cs_prefix_spec:N #1
+  {
+    \token_if_macro:NTF #1
+      {
+        \exp_after:wN \@@_prefix_arg_replacement:wN
+          \token_to_meaning:N #1 \s_@@_stop \use_i:nnn
+      }
+      { \scan_stop: }
+  }
+\cs_new:Npn \cs_parameter_spec:N #1
+  {
+    \token_if_macro:NTF #1
+      {
+        \exp_after:wN \@@_prefix_arg_replacement:wN
+          \token_to_meaning:N #1 \s_@@_stop \use_ii:nnn
+      }
+      { \scan_stop: }
+  }
+\cs_new:Npn \cs_replacement_spec:N #1
+  {
+    \token_if_macro:NTF #1
+      {
+        \exp_after:wN \@@_prefix_arg_replacement:wN
+          \token_to_meaning:N #1 \s_@@_stop \use_iii:nnn
+      }
+      { \scan_stop: }
+  }
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{什么都不做的函数}
+%
+% \begin{macro}[EXP]{\prg_do_nothing:}
+%   这在其他任何地方都不适合!
+%    \begin{macrocode}
+\cs_new:Npn \prg_do_nothing: { }
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{中断映射函数}
+%
+%    \begin{macrocode}
+%<@@=prg>
+%    \end{macrocode}
+%
+% \begin{macro}[EXP]{\prg_break_point:Nn, \prg_map_break:Nn}
+% 在内联映射中，必须在映射结束时重置嵌套层级，即使用户决定退出也是如此。
+% 这是通过将必须作为 \cs{@@_break_point:Nn} 的参数执行的代码放置在其中实现的。
+% 然后，中断函数被定义为跳转到该点并执行 \cs{@@_break_point:Nn} 的参数，然后再执行
+% 用户的代码（如果有的话）。这里有一个检查，以确保我们关闭正确的循环，否则继续进行中断操作。
+%    \begin{macrocode}
+\cs_new_eq:NN \prg_break_point:Nn \use_ii:nn
+\cs_new:Npn \prg_map_break:Nn #1#2#3 \prg_break_point:Nn #4#5
+  {
+    #5
+    \if_meaning:w #1 #4
+      \exp_after:wN \use_iii:nnn
+    \fi:
+    \prg_map_break:Nn #1 {#2}
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\prg_break_point:}
+% \begin{macro}{\prg_break:, \prg_break:n}
+% \cs{prg_break_point:Nn}和\cs{prg_map_break:Nn} 类似简化，用于非映射的快速短期
+% （fast short-term）递归，不需要支持嵌套，并且在循环结束时不需要执行任何操作。
+%    \begin{macrocode}
+\cs_new_eq:NN \prg_break_point: \prg_do_nothing:
+\cs_new:Npn \prg_break: #1 \prg_break_point: { }
+\cs_new:Npn \prg_break:n #1#2 \prg_break_point: {#1}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \subsection{开始一个段落}
+%
+% \begin{macro}{\mode_leave_vertical:}
+% 这里采用的方法与 \LaTeXe{} 或 plain \TeX{}使用的方法不同，后者会解封（unbox）
+% 一个空盒子以强制进入水平模式。这会在重新插入解封盒子的记号之前插入\tn{everypar}
+% 记号。这里采用的方法使用了一个受保护的宏，相当于\tn{quitvmode}原语。在垂直模式
+% 下，会插入\tn{indent}原语：这将切换到水平模式并插入\tn{everypar}记号，而不插入
+% 其他任何内容。与\LaTeXe{}版本不同，\eTeX{}的可用性意味着可以在例如\tn{halign}
+% 的开头进行模式测试。
+%    \begin{macrocode}
+\cs_new_protected:Npn \mode_leave_vertical:
+  {
+    \if_mode_vertical:
+      \exp_after:wN \tex_indent:D
+    \fi:
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex

@@ -1,0 +1,674 @@
+\iffalse meta-comment
+
+File: l3note.tex
+
+Copyright (C) 2023 by Yu Du <3531243657@qq.com>
+
+This work may be distributed and/or modified under the
+conditions of the LaTeX Project Public License, either
+version 1.3c of this license or (at your option) any later
+version. The latest version of this license is in:
+
+  http://www.latex-project.org/lppl.txt
+
+and version 1.3 or later is part of all distributions of
+LaTeX version 2005/12/01 or later.
+
+\fi
+
+\documentclass[kernel]{l3doc}
+
+\input{./set/styleset.tex} % 样式设置
+\input{./set/codeset.tex} % 代码设置
+
+%======================================================%
+% 用于根据不同文件选取不同代码：
+\newif\ifbootstrap
+\newif\ifnames
+\newif\ifbasics
+%======================================================%
+
+\listfiles
+
+\begin{document}
+
+\title{一份（还没写完的）\LaTeX3编程说明}
+\author{dyu%
+  \thanks{3531243657@qq.com}
+}
+\date{\today}
+
+\pagenumbering{roman}
+
+\maketitle
+% 自此标题将按节标题格式生成
+\TitleToSection
+\DisableImplementation
+
+\clearpage
+
+\tableofcontents
+
+\clearpage
+
+\pagenumbering{arabic}
+
+
+\chapter*{前言}
+
+\LaTeX3是\LaTeX{}的下一代格式，与传统\LaTeXe{}相比，它更加系统化、标准化，更加接近现代编程语言。而我正是被它的诸多优点所吸引，一时兴起学了一下，又顺手整理了一份笔记，希望这份笔记（文档）能够帮到对\LaTeX3感兴趣的人。
+
+该文档主要参考的是\href{https://mirrors.cqu.edu.cn/CTAN/macros/latex/contrib/l3kernel/interface3.pdf}{\file{interface3}}文档，因此也可以将其视为\file{interface3}的\emph{非正式}翻译，之所以说是“非正式”，是因为我并没有原文对字翻译里面的内容（尤其是对里面各种函数和变量的解释），而是以中文用户更易理解的表达方式重述了原文所要表达的意思（“入乡随俗”）。不过，为能够掌握最纯正的“一手知识”，我更加鼓励大家去阅读\file{interface3}原文（{\footnotesize 您要是不去读一遍又怎会知道我对每个函数和变量的解释有多贴心}）。
+
+一份好的文档自然是要经过千锤百炼的，如果大家在阅读该文档的过程中发现任何错误，或是对该文档有任何改进意见，还望不吝赐教，欢迎到GitHub仓库提交 \href{https://github.com/123dyu/l3note/issues}{Issues} 或 \href{https://github.com/123dyu/l3note/pulls}{pull requests}。
+
+\section*{文档获取方式}
+
+到\href{https://github.com/123dyu/l3note.git}{项目主页}下载，或使用如下命令克隆代码仓库（需装有git程序）:
+\begin{shell}[alsoletter={.},morekeywords={git,clone}]
+  git clone git@github.com:123dyu/l3note.git
+\end{shell}
+
+\section*{一点建议}
+
+本文档并非是一份\LaTeX3零基础教程，纯新手在阅读之前建议先学一下与\LaTeX{}相关的基础知识，可以参考的中文资料有：“lshort-zh-cn”\cite{lshort-zh-cn}，刘海洋编著的《\LaTeX{}入门》\cite{刘海洋2013latex入门}等。当然还有其他教程，此处不一一列举。
+
+在阅读本文档时，如果遇到看不懂的概念，不要着急，暂时跳过，继续往后读，这并不会影响对知识的一个完整掌握，因为后续基本都会有对先前那些可能看不懂的概念的解释，倘若找不到，那说明这一概念或许是需要提前掌握的基础知识。
+
+\section*{文档使用说明}
+
+本文会涉及对各种函数和变量的解释，将使用如下方式来对其进行排版：
+
+\begin{function}{函数名称}
+  \begin{syntax}
+    函数具体形式
+  \end{syntax}
+  对函数的解释。
+\end{function}
+
+\begin{variable}{变量名称}
+  对变量的解释。
+\end{variable}
+
+对于函数而言，其名称后面可能会出现一个特殊符号，各自对应的含义如下：
+\begin{itemize}
+  \item 如果函数名称后面有一个实心的五角星$\star$ ，那么说明该函数是可完全展开的，这类函数可以在x-型、e-型或f-型展开中被展开；
+  \item 如果函数名称后面有一个空心的五角星\ding{73}，则说明该函数的展开是有限制的，这类函数不能在f型展开中被展开。
+\end{itemize}
+
+另外，如果函数的（最后两个）参数说明符（指示函数如何处理参数的一串区分大小写的字母）中有带下划线的\underline{\itshape TF}，则说明这类函数是\emph{条件函数}（其定义参见\ref{subsec:cstjcl}节），而且这里实际上包含了三个条件函数（T、F、TF），比如：
+
+\begin{function}[TF,EXP]{\sys_if_engine_xetex:}
+  \begin{syntax}
+    \cs{sys_if_engine_xetex:TF} \Arg{条件为真时执行的代码} \Arg{条件为假时执行的代码}
+  \end{syntax}
+\end{function}
+一共包含了以下三个条件函数：
+\begin{itemize}
+  \item \cs{sys_if_engine_xetex:TF} {\small  \Arg{条件为真时执行的代码} \Arg{条件为假时执行的代码}}
+  \item \cs{sys_if_engine_xetex:T} \Arg{条件为真时执行的代码} 
+  \item \cs{sys_if_engine_xetex:F} \Arg{条件为假时执行的代码}
+\end{itemize}
+
+本文只会对参数说明符中有“TF”的条件函数进行解释，剩余两个条件函数（T、F）的作用不言而喻。
+
+最后，如果函数存在变体，则\emph{变体函数}会排版在\emph{基础函数}下方（其定义参见\ref{subsec:hsbt}节），并以灰色显示，比如：
+
+\begin{function}{\cs_new:Nn, \cs_new:cn, \cs_new:Nx, \cs_new:cx}
+  \begin{syntax}
+    \cs{cs_new:Nn} \meta{函数} \marg{函数具体定义}
+  \end{syntax}
+  |Nn|变体：\verb"cN|Nx|cx"
+\end{function}
+
+
+\part{\LaTeX3语法简介}
+
+\LaTeX3 有一套全新的编程语法，它把命令分为\textbf{函数}和\textbf{变量}（二者均有“公私”之分），并使用下划线(|_|)和冒号(|:|)来表现结构。
+
+\chapter{编程环境}
+
+在\LaTeX3 的编程环境中，“|_|”和“|:|”的类代码被设置为11（表示字母），而且所有的空格和换行都会被忽略（空格字符和换行字符的类代码被设置为9，即可忽略字符）。这时可以使用 \cs{c_colon_str} 代替冒号的原意，使用 \cs{c_math_subscript_token} 代替下划线的原意，空格则使用“|~|”\cprotect\footnote{注意：多个连续的“|~|”表示一个；控制词之后或行开头的“|~|”会被忽略，而行末的“|~|”则不会被忽略。}来代替，当要使用“|~|”的原意（即不可断开的空格，在\TeX{}中称为“带子”）时，可用宏\tn{nobreakspace}代替。
+
+以下几个由\pkg{l3bootstrap}模块提供的命令用于进入\LaTeX3编程环境：
+
+\DocInput{./source/l3bootstrap-cn.dtx}
+
+
+\chapter{命名规范}
+
+\begin{enumerate}
+  \item \textbf{函数}：用于完成某种特定的操作，可吸收参数并被执行或展开。命名规则如下：
+  \begin{latexsyntax}[gobble=4]
+    (*\cs[no-index]{\meta{模块名}_\meta{描述}:\meta{参数说明}}*)
+  \end{latexsyntax}
+  \item \textbf{变量}：用于存储数据，可作为函数参数被函数调用。命名规则如下：
+  \begin{latexsyntax}[gobble=4]
+    (*\cs[no-index]{\meta{作用域}_\meta{模块名}_\meta{描述}_\meta{变量类型}}*)
+  \end{latexsyntax}
+  {
+    \kaishu 
+    注：对于变量，当\meta{模块名}和\meta{变量类型}相同时，出于代码美观原因（避免重复啰嗦）通常会把\meta{模块名}部分省略。
+  }
+\end{enumerate}
+
+\section{模块与描述}
+
+可以看到，两种语法都包含了\meta{模块名}和\meta{描述}两个部分，它们给出了命令（函数和变量）的信息，具体说明如下：
+
+\begin{itemize}
+  \item \textbf{\hypertarget{module}{模块}}：具有相关功能的函数和变量可构成一个模块，其名可以用任何未被占用的字母组合表示（对于宏包来说模块名就是包名）。
+  \item \textbf{描述}：给出函数和变量的功能信息，并为其确定唯一的名称。它由\emph{字母}或\emph{字母与下划线}“|_|”\emph{的组合}（“|_|” 通常用来分隔单词语义）构成。
+\end{itemize}
+
+\section{函数的参数说明}
+
+对于函数，\meta{参数说明}指示了函数该如何处理参数（告诉函数该接收什么样的参数或是怎样接收参数），它由一串区分大小写的字母组成（至于不带参数的函数，参数说明为空，函数名以“|:|”结尾），每个字母（参数说明符）都代表了一种特定操作。为方便叙述，后续会将函数的某个参数说明符所对应的参数简称为：\meta{参数说明符}-型参数，比如会把参数说明符f所对应的参数简称为：f-型参数。
+
+\subsection*{基本参数说明符}
+\begin{description}
+  \item[n:]接收一组由大括号括起来的记号列表（不进行展开）。
+  \item[N:]接收单个记号（该参数不能在大括号内），比如可以是一个控制序列或是一个单独的字符。
+  \item[p:]原始\TeX{}形参，比如|#1|, |#2|这种。
+  \item[T,F:]n的特殊情形，用于在条件命令中给出对应条件分支（True, False）的代码。
+\end{description}
+
+\subsection*{两个特殊的参数说明符}
+\begin{description}
+  \item[w:] 奇异型（weird）参数，用于不遵循任何标准参数说明规则的函数。其适用于让函数接收一串以终止符（比如：\cs{q_stop}）结尾的参数（比如：\cs{use_none_delimit_by_q_stop:w} ~\meta{text}~\cs{q_stop}）。另外，这是一个可“包罗万象”的参数说明符，故而一个函数的参数说明符中出现多个w的写法是不恰当的（比如：\cs{foo_bar:wnw}，这种写法是不被鼓励的，除非代码的逻辑特别清晰），尤其是连写情况（比如：\cs{foo_bar:ww}，这是一种很糟糕的写法，完全可以将这一函数第二个参数中的内容囊括进第一个参数中，写一个w即可，写两个显得多此一举），在编写代码（“设计函数”）时一定要注意这一点。举例说明如下：
+  \begin{latexexample}[gobble=4]
+    \cs_new_protected:Npn \__clist_get:wN #1 , #2 \q_stop #3
+      { \tl_set:Nn #3 {#1} }
+    % 对于函数\__clist_get:wN所接收的内容，与w对应的为：#1 , #2 \q_stop；与N对应的为#3
+  \end{latexexample}
+
+  \item[D:] 表示不要使用（Do not use），这一特殊情形用在对\TeX{}原语的封装（比如：函数\cs{tex_def:D}表示的是原语\tn{def}）。
+\end{description}
+注意：
+\DocInput{./source/l3names-cn.dtx}
+
+\subsection*{\hypertarget{exp}{宏展开控制参数说明符}}
+
+\begin{description}
+  \item[c:] 将接收的内容转化为命令。此操作分为两步：首先把所接收内容完全展开，且展开后的内容只包含字符；然后再将整个字符串创建为命令。此功能相当于\tn{csname} \meta{文本} \tn{endcsname}命令。
+  \item[V:]接收一个命令（通常是变量）并获取命令的值。
+  \item[v:]这是c与V的结合，先将接收的内容完全展开到只包含字符，再将其转化为命令，最后获取该命令的值。
+  \item[x:]接收参数完全展开（递归展开，一展到底）后的内容。在大多数情况下，所接收的参数中若出现形参符|#|（类代码为6），需要双写它（即具有|##|这样的形式）；另外，参数说明符中有x的函数本身不会在要被完全展开的环境（x-型展开或e-型展开）中被展开。
+  \par
+  {
+    \kaishu 
+    补充说明：详见：\url{https://ask.latexstudio.net/ask/question/8282.html}
+
+    x-型参数中的 |#| 需要双写的原因是其内部定义了一个临时的宏，比如\cs{use:x}的实现原理（具体定义）为:
+    \begin{latexsyntax}[gobble=6]
+      \cs_set_protected:Npn \use:x #1
+        {
+          \cs_set_nopar:Npx \l__exp_internal_tl {#1}
+          \l__exp_internal_tl
+        }
+      % 为方便叙述，简写为如下形式：
+      \def\use:x #1{\edef\temp{#1}\temp}
+    \end{latexsyntax}
+    当写|\use:x{*#1*}|时，\cs{use:x}展开为：|\edef\temp{*#1*}\temp|，这时就会出错，因为\tn{temp}是一个无参数命令（这意味着在定义它时不能出现形参），但它的具体定义（替换文本）中却出现了形参，所以得双写|#|，即写为|\use:x{*##1*}|，这时|##|作为|#|出现而非形参符（引用参数的标识）。
+
+    从上例可以看出，当|#|作为形参符（引用参数的标识）出现时，它应该仅写一次（随嵌套层次而倍增）；当|#|作为其自身出现时，应该双写；另外，需要双写的 |#| 可以使用 \cs{exp_not:n} 包裹起来，这样就不用双写，如可以这样书写代码：
+    |\use:x { \exp_not:n { \def\tmp#1{#1} } }|。
+  }
+  \item[e:]接收参数完全展开（递归展开，一展到底）后的内容。与x-型展开不同的是：所接收的参数中若出现形参符 |#|（类代码为6），无需双写它；另外，参数说明符中有e的函数在要被完全展开的环境（x-型展开或e-型展开）中可以被展开。
+  {
+    \par\kaishu
+    一点建议：e-型展开是用原语\tn{expanded}(或写为\cs{tex_expanded:D})实现的，展开速度很快，对于需要完全展开的参数，能使用e-型展开就不要使用x-型展开（从\TeX~Live 2019开始，各个主要引擎都已经有原语\tn{expanded}了）。
+  }
+  \item[o:]接收参数展开一层（也就是不会递归展开）后的内容。另外注意：如果参数是带大括号的记号列表，那么只有列表中的第一个记号会被展开。
+  \item[f:]将接收的内容展开到第一个不可展开的记号为止（也就是在带大括号的记号列表中递归展开第一个记号，剩余部分保持不变），如果遇到的第一个不可展开的记号是一个空格，那么空格将被移除，接下来的记号不会展开。举例说明如下：
+  \begin{latexexample}[gobble=4]
+    \mymodule_example:f { \int_eval:n { 1 + 1 } , \int_eval:n { 1 + 2 } }
+    % 相当于：
+    \mymodule_example:n { 2 , \int_eval:n { 1 + 2 } }
+    % 2无法再被展开，故展开到此为止，不会继续展开后面的内容
+    % 如果使用参数说明符x，即
+    \mymodule_example:x { \int_eval:n { 1 + 1 } , \int_eval:n { 1 + 2 } }
+    % 则相当于：
+    \mymodule_example:n { 2 , 3 }
+  \end{latexexample}   
+\end{description}
+
+\section{变量的作用域与类型}
+
+对于变量，其\meta{作用域}部分指明了变量的有效作用范围，\textbf{作用域一共有三种：}
+\begin{description}
+  \item[c:]全局常量（constant），其值不应更改；
+  \item[g:]全局变量（global），其值全局有效；
+  \item[l:]局部变量（local），其值局部生效。
+\end{description}
+{
+  \kaishu 
+  注：变量的有效作用范围（局部或全局）并不能简单的通过命名来实现（变量名开头的\meta{作用域}只是一种命名约定，是用来给人而非编译器看的，以此提高代码的可读性），而是需要使用不同的函数来进行设置，比如函数\cs{int_set:Nn}和\cs{int_gset:Nn}分别设置了局部和全局整型变量的值，如此才能让变量的值局部有效或全局有效。
+}
+
+另外，\LaTeX3中的\meta{变量类型}包括：\\[.1cm]
+\fbox{
+  \begin{minipage}[t]{.4\linewidth}
+    \begin{description}
+      \item[str:]字符串
+      \item[token:]记号 
+      \item[tl:]记号列表
+      \item[seq:]序列
+      \item[clist:]逗号分隔列表
+      \item[prop:]属性列表
+      \item[int:]整数（计数器）
+      \item[fp:] 浮点数
+      \item[intarray:]整型数组
+      \item[fparray:]浮点型数组
+      \item[flag]
+    \end{description}
+  \end{minipage}
+  \begin{minipage}[t]{.4\linewidth}
+    \begin{description}
+      \item[box:]盒子寄存器
+      \item[coffin:]匣子（带“手柄”的盒子）
+      \item[bool:]布尔型变量
+      \item[dim:]刚性长度
+      \item[skip:]弹性长度
+      \item[muskip:]数学模式的弹性长度
+      \item[ior、iow:]输入、输出流 
+      \item[regex:]正则表达式
+      \item[cctab:]类别码表
+      \item[quark:]“夸克”，展开到自身的宏
+      \item[mark:]扫描标记 
+    \end{description}
+  \end{minipage}
+}
+
+\section{私有函数与变量}
+
+私有函数和变量只应该在模块内部使用，普通用户和其他宏包作者不应当使用它们。在\LaTeX3 中，通过命名约定（也就是在函数名或变量名中表明它是公共的还是私有的）和一些支持机制来让其与公有函数和变量（用户可放心访问）做出区分。具体命名约定是：在函数和变量的\meta{模块名}前加两个下划线“|__|”来表明其是私有的，即
+\begin{enumerate}
+  \item 私有函数：
+  \begin{latexsyntax}[gobble=4]
+    (*\cs[no-index]{__\meta{模块名}_\meta{描述}:\meta{参数说明}}*)
+  \end{latexsyntax}
+  \item 私有变量：
+  \begin{latexsyntax}[gobble=4]
+    (*\cs[no-index]{\meta{作用域}__\meta{模块名}_\meta{描述}_\meta{变量类型}}*)
+  \end{latexsyntax}
+\end{enumerate}
+
+\paragraph{使用\textsf{@@}和 \file{DocStrip}标记私有函数与变量}~
+\par 
+在\LaTeX{}中，可以使用 \file{DocStrip}工具进行文学编程（当然还有 \file{Doc}工具），不过在编程过程中难免会产生许多内部函数或变量，造成信息冗余（每个内部函数和变量都包含\meta{模块名}），为了简化代码，\file{DocStrip}工具引入了名字空间的手法，即
+
+\begin{latexsyntax}
+  %^^X 进入名字空间
+  %<@@=(*\meta{模块名}*)>
+  ...
+  %^^X 关闭名字空间
+  %<@@=>
+\end{latexsyntax}
+这样一来，对于内部函数就可以使用|@@|来代替|__|\meta{模块名}，对于内部变量则可以使用|_@@| 来代替|__|\meta{模块名}。举例如下：
+\begin{latexexample}[showspaces=true]
+  %^^X 进入名字空间modi
+  %<@@=modi>
+  %    \begin{macrocode}
+  \cs_new:Npn \@@_function:n #1
+    {...}
+  \tl_new:N \l_@@_foo_tl
+  %^^X 进入名字空间modii
+  %<@@=modii>
+  \cs_new:Npn \@@_function:n #1
+    {...}
+  \tl_new:N \l_@@_foo_tl
+  %    \end{macrocode}
+  %^^X 关闭名字空间
+  %<@@=>
+\end{latexexample}
+以上两个定义看似相同，但实际上会被\file{DocStrip}分别转化为：
+\begin{latexexample}
+  \__modi_function:n
+  \l_modi_foo_tl
+  % 和
+  \__modii_function:n
+  \l__modii_foo_tl
+\end{latexexample}
+{
+  \kaishu 
+  注意：
+  \begin{itemize}
+    \item 当\verb|%|的注释功能被关闭时，可以使用|^^A|或|^^X|充当注释符；对于代码块，则推荐使用|\iffalse...\fi|进行注释。
+    \item \verb|%|和|\end{macrocode}|之间必须留有四个空格，而\verb|\begin{macrocode}|和\verb|%|之间的空格则无此限制（但为了对称起见，通常都会加上）。
+  \end{itemize}
+}
+
+
+\chapter{编程规范}
+
+这一部分罗列了一些有关如何编写优秀\LaTeX3代码的指导原则（详细原则请参看\href{https://ctan.math.illinois.edu/macros/latex/contrib/l3kernel/l3styleguide.pdf}{l3styleguide.pdf}），旨在规范编程风格，从而提高代码的可读性和可维护性。当然这些原则（或者说格式指南）只是建议并不强制遵循。
+
+\paragraph{编程注意事项\cite{expl3}}~
+
+\begin{itemize}
+  \item \LaTeX3主要关注于程序设计，所以在某些地方仍会用到\LaTeXe{}的内部宏，比如\tn{IfPackageLoadedTF}\footnote{\tn{IfPackageLoadedTF}\Arg{宏包}\Arg{肯定语句}\Arg{否定语句}：如果检测到已经调用了\meta{宏包}就执行\meta{肯定语句}，否则执行\meta{否定语句}。}、\tn{IfPackageAtLeastTF}\footnote{\tn{IfPackageAtLeastTF}\Arg{宏包}\Arg{版本日期}\Arg{肯定语句}\Arg{否定语句}：如果检测到所调用\meta{宏包}的版本日期比设定的\meta{版本日期}新则执行\meta{肯定语句}，否则执行\meta{否定语句}。其中，\meta{版本日期}的格式应为|YYYY/MM/DD|。}等（因为\LaTeX3目前没有原生的宏包导入模块）。
+  \item 用户层面的宏应当使用\pkg{xparse}宏包\cite{xparse}所提供的机制定义。
+  \item 在内部层面，大部分函数应该被定义为\tn{long}类型（比如使用\cs{cs_new:Npn}来定义函数而非\cs{cs_new_nopar:Npn}）。
+  \item 尽可能地在使用变量和函数之前声明它们（也就是先定义再使用）。
+  \item 尽可能地使用“高级”函数（如：\cs{cs_if_exist:NTF}）而非“低级”函数（如：\cs{if_cs_exist:N}）。
+  \item 在命名函数和变量时尽可能地描述清楚其含义。比如在需要使用辅助函数的地方，应在函数名称中加上|auxi|、|auxii|等字眼，顺便一提，不推荐使用 |aux_i|和 |aux_ii| 这种写法，因为这会与\cs{use_i:nn}这类函数使用的约定相冲突。
+\end{itemize}
+
+
+\paragraph{代码风格\cite{l3styleguide}}~
+
+\begin{itemize}
+  \item 每行代码不超过80个字符。
+  \item 除一些使用简单参数的情况外（如|{#1}|，|#1#2|等），代码各成分间应合理使用空格进行划分以增加其可读性；在有些地方还会使用空格将代码的某些部分对齐以体现它们之间的相似性。
+  \item 每一层语义应单独占据一行以使语义更加清晰（可读性比紧凑性更为有用），比如条件函数中的|true|和|false|分支就应该至少占据两行。
+  \item 不同层级的代码间应缩进两个空格（不建议使用“Tab”进行缩进）。
+\end{itemize}
+举例说明如下：
+\begin{latexexample}[showspaces=true]
+  \cs_new:Npn \module_foo:nn #1#2
+    {
+      \tl_if_empty:nTF {#1}
+        { \module_foo_aux:n { X #2 } }
+        {
+          \module_foo_aux:nn {#1} {#2}
+          \module_foo_aux:n { #1 #2 }
+          \cs_generate_variant:Nn \foo:Nn {     NV , No }
+          \cs_generate_variant:Nn \foo:Nn { c , cV , co }
+        }
+    }
+\end{latexexample}
+
+
+\part{程序设计流程}
+
+\chapter{变量的相关操作}
+
+在\LaTeX3中，同一类型的变量组成一个模块，因而变量的类型与其模块名一致，于是，在对变量进行操作的函数的名称中\meta{模块名}基本都会用\meta{变量类型}来代替，后面将会陆续看到这一现象。
+
+由于\LaTeX3中的变量有多种类型，而对各种变量类型（对应于各种模块）的各种操作又不尽相同，因此想要完全掌握与变量相关的各种操作是需要花大力气的，为减轻后续的学习负担，这一部分先说一下对各种变量大致通用的操作，以起到抛砖引玉的作用。
+
+\section{声明变量}
+
+在\LaTeX3的代码约定中，所有变量在进行操作之前都必须先声明（注：由于底层\TeX{}实现的固有性质，可以不先声明就直接赋值给\emph{记号列表变量}或\emph{逗号分隔列表变量}，但不建议这么做！）。变量通常按如下方式来进行声明：
+
+\begin{latexsyntax}
+  (*\cs[no-index]{\meta{变量类型}_new:N} \meta{变量名}*)
+  % --->>> N变体：c
+\end{latexsyntax}
+{\kaishu 表示全局地声明（创建）一个新变量，如果变量已经声明（创建），则会报错。}
+
+\section{为变量赋值}
+
+\begin{itemize}
+  \item 局部赋值：
+  \begin{latexsyntax}[gobble=4]
+    (*\cs[no-index]{\meta{变量类型}_set:Nn} \meta{变量名} \Arg{变量值}*)
+    % --->>> Nn变体：cn
+  \end{latexsyntax}
+  {\kaishu 表示在局部范围内为（前面已声明的）变量赋值。}
+
+  \item 全局赋值：
+  \begin{latexsyntax}[gobble=4]
+    (*\cs[no-index]{\meta{变量类型}_gset:Nn} \meta{变量名} \Arg{变量值}*)
+    % --->>> Nn变体：cn
+  \end{latexsyntax}
+  {\kaishu 表示在全局范围内为（前面已声明的）变量赋值。}
+\end{itemize}
+
+\textbf{注意：}并不是所有类型的变量都是按上述形式来赋值的（比如：属性列表，序列等，它们的赋值方式并没有上述方式来的直接）。
+
+\section{使用变量}
+
+前面说过，变量用于存储数据，而数据自然是要被使用的，绝大多数时候是不能通过直接使用变量来使用其中所存储的数据的，而是需要使用某种访问函数来访问该变量，较为通用的访问函数形式如下：
+  \begin{latexsyntax}[gobble=4]
+    (*\cs[no-index]{\meta{变量类型}_use:N} \meta{变量名}*)
+    % --->>> N变体：c
+    % 表示使用变量的值。
+  \end{latexsyntax}
+  
+值得一提的是，由于记号列表变量是可展开的，故可以省略访问函数\verb|\tl_use:N|而直接使用它，其他类型的变量则不行。最后注意：这一形式的访问操作同样不是对所有类型的变量都成立的。
+
+下面以tl型变量为例说明：
+\begin{latexexample}
+  % 声明变量（也就是全局地创建tl型变量）
+  \tl_new:N \l_mymod_test_tl
+  \tl_new:N \g_mymod_test_tl
+
+  % 使用变量，查看其值（对于tl型变量，也可以省略(*\cs{tl_use:N}*) 而直接使用它）
+  \tl_use:N \l_mymod_test_tl % 初始值为空
+  \tl_use:c { g_mymod_test_tl } % 初始值为空
+
+  % 分组并赋值
+  \group_begin: % 开启分组
+  % 实际上，tl型变量可以不加声明，直接完成下面两步，但不建议这么做!
+
+  % 局部地为变量赋值
+  \tl_set:Nn \l_mymod_test_tl { 天地有正气，杂然赋流形。 }
+  % 全局地为变量赋值
+  \tl_gset:Nn \g_mymod_test_tl { 下则为河岳，上则为日星。 }
+
+  % 使用变量，在组内查看其值
+  \tl_use:N \l_mymod_test_tl % 值为：天地有正气，杂然赋流形。
+  \tl_use:N \g_mymod_test_tl % 值为：下则为河岳，上则为日星。
+
+  \group_end: % 关闭分组
+
+  % 使用变量，在组外查看其值，这里省略了(*\cs{tl_use:N}*)，同样可以使用它
+  \l_mymod_test_tl % 值为：空
+  \g_mymod_test_tl % 值为：下则为河岳，上则为日星。
+\end{latexexample}
+
+\section{临时变量}
+
+\LaTeX3为绝大多数变量类型预定义了四个临时变量，其名称具有如下形式：
+\begin{itemize}
+  \item 局部临时变量：
+  \begin{itemize}
+    \item \cs[no-index]{l_tmpa_\meta{变量类型}}
+    \item \cs[no-index]{l_tmpb_\meta{变量类型}}
+  \end{itemize}
+  \item 全局临时变量：
+  \begin{itemize}
+    \item \cs[no-index]{g_tmpa_\meta{变量类型}}
+    \item \cs[no-index]{g_tmpb_\meta{变量类型}}
+  \end{itemize}
+\end{itemize}
+这些临时变量永远不会被内核代码使用，因此可以放心地与任何\LaTeX3定义的函数一起使用，然而它们可能会被其他非内核代码覆盖，故应当将其用于短期存储。
+
+%===================以下内容以.dtx文件格式载入=================%
+
+\DocInput{./source/l3basics-cn.dtx}
+
+%============================================================%
+
+\part{实现原理}
+
+
+\begingroup
+
+\def\maketitle{}
+\let\subsubsection\subsection
+\let\subsection\section
+\let\section\chapter
+
+
+\EnableImplementation
+\DisableDocumentation
+\DocInputAgain
+
+\endgroup
+
+
+\appendix
+\part{附录}
+
+\chapter{\TeX{} 中的一些基本概念}
+
+\section{几条术语解释}
+\label{apdx:A}
+\begin{description}
+  \item[控制序列(control sequence)：]以反斜杠（\textbackslash）开头的任何东西，它有两种形式：
+  \begin{itemize}
+    \item \emph{控制词}(control word)：由反斜杠后跟一个或多个字母（字母是指|A...Z|和 |a...z|这52个字符；另外注意|0...9|不被视为字母，它们不应该出现在这种控制序列中）组成（比如|\TeX|），并会以其后的一个非字母符作为结束的标志。另外注意，控制词后面的空格会被忽略，如果要在控制词后得到一个空格，那么可以在其后使用\verb*|\ |或着加一个空的分组|{}|，比如：
+    \begin{tcblatexexample}
+% 使用如下代码：
+\par Happy \TeX ing!
+\par Happy \TeX\ ing!
+\par Happy \TeX{} ing!
+% 将会分别得到：
+    \end{tcblatexexample}
+    \item \emph{控制符}(control symbol)：由反斜杠后跟单个非字母符组成（比如|\&|），其后的任何字符都不会被忽略。不过，当控制符作为变音记号出现时，其后的空格会被忽略，比如：
+    \begin{tcblatexexample}
+% 使用：
+\par \'abc 
+\par \' abc
+% 都会得到：
+    \end{tcblatexexample}
+  \end{itemize}
+
+  \item[命令(command)：] 用于指导\TeX{} 执行某种操作（也就是如何排版文档）， 它可以是控制序列、活动字符或普通字符（\TeX{}将普通字符视为命令这事并不奇怪，当\TeX{} 遇到一个普通字符时，它会把该字符作为一个包含当前字体的盒子来排版，比如输入|W|将会排版出W）。
+  另外，从前面控制序列的定义可知，每个控制序列都是一个命令，但反之未必，比如字母“|W|”是一个命令而非控制序列。基于此，在本文中为叙述方便，会将控制序列叫做命令。
+
+  \item[宏(macro)：] 由|\def|、|\edef|、|\let|、|\chardef|系列命令所定义的东西。它可以是一个控制序列或一个活动字符。
+  
+  \item[原语(primitive)：]由引擎所提供的命令（无法再展开）。 
+  
+  \item[记号(token)：]要么是一个控制序列，要么是一个带有类别码的字符。
+\end{description}
+
+\section{\TeX 中的进制数}
+
+在\TeX 中，常规使用的数字（number）是十进制数、八进制数和十六进制数，它们的表示方法如下：
+\begin{enumerate}
+  \item 十进制（逢十进一）数：用\meta{数字}表示，其中\meta{数字}包含0$\sim$9。
+  \item 八进制（逢八进一）数：用|'|\meta{数字}表示，其中\meta{数字}包含0$\sim$7。
+  \item 十六进制（逢十六进一）数：用\verb|"|\meta{数字}表示，其中\meta{数字}包含0$\sim$9外加\textbf{大写字母}A$\sim$F。
+\end{enumerate}
+以上三种进制数的前面都可以加上“+”或“-”来表示数字的正负（不加默认为正）。另外注意，数字不是一个命令，故不能单独使用，通常会将其放在某个数字操作命令之后用以完成某种操作，比如可以使用\tn{number}\meta{数字}命令来查看它们的十进制数值，举例说明如下：
+\begin{latexexample}
+  % 使用如下代码：
+  \number61
+  \number'75
+  \number"3D
+  % 都会得到十进制数字：61
+\end{latexexample}
+
+\section{类别码}
+
+在\TeX{} 中，字符被分为了16类，并使用$0\sim 15$（整数）的\emph{类别码}(category code)来区分，每个类别都被赋予了不同的含义。字符的类别码决定了其在\TeX{}中扮演的角色，详见表\ref{tab:catcode}。
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{clc}
+    \toprule
+    类别码 & 含义 & 字符 \\
+    \midrule
+    0  & 转义符 & |\| \\
+    1  & 组开始符            &  |{|  \\
+    2  & 组结束符            &  |}| \\
+    3  & 数学模式符          &  \verb|$| \\
+    4  & 制表符          &  |&|  \\
+    5  & 回车符              &  |^^M| $\equiv $ ASCII: CR\\
+    6  & 宏参数符            &  |#| \\
+    7  & 上标符              &  |^| \\ 
+    8  & 下标符              &  |_| \\ 
+    9  & 可忽略字符（空字符）\footnotemark &  |^^@| $\equiv $ ASCII: NUL\\
+    10 & 空格符              &  \verb*| | \\
+    11 & 字母                &  |A~Z|, |a~z|  \\
+    12 & 其他字符            &   本表未列字符 \\
+    13 & 活动符\footnotemark              &   |~| \\
+    14 & 注释符              &   \% \\
+    15 & 无效符\footnotemark &   |^^?| $\equiv $ ASCII: DEL\\
+    \bottomrule
+  \end{tabular}
+  \caption{类别码及其含义}
+  \label{tab:catcode}
+\end{table}
+
+\footnotetext[7]{\TeX{}遇到它后会将其从输入流中清除（排版效果上仿佛\TeX{}对其视而不见）。通常将它作为字符串的最后一个字符，表示该字符串到此结束\cite{胡伟2017latex2e}。还需要注意的是，不能将它放在控制序列中，它会断开控制序列。}
+\footnotetext[8]{其本身就是一个宏，代表着一个宏定义（也就是一个无需转义字符前导的\TeX{}控制序列）。当\TeX{}遇到一个活动字符时，它就会执行该活动字符所代表的定义，若该活动字符没有定义，则\TeX{}会报错（“这是一个没有定义的控制序列”）。}
+\footnotetext[9]{表示不应在\TeX{}中出现的字符，\TeX{}遇到它后会报错。}
+
+可以使用\tn{catcode}命令来设置（切换）或查看字符的类别码：
+\begin{latexsyntax}
+  % 设置字符的类别码：
+  \catcode<字符编码>=<类别码>  %“=”可以省略
+  
+  % 查看字符的类别码：
+  \catcode<字符编码> % 如此得到的字符类别码是一个数字，不能单独使用，可以使用\number命令配合查看字符的类别码
+
+  <字符编码>的格式为：`\<字符>、`<字符> 或 <字符编码>的十进制、八进制、十六进制
+\end{latexsyntax}
+对于该命令中的\meta{字符编码}，其格式通常为|`\|\meta{字符} （此种形式适用于任何字符）或 |`|\meta{字符}，它们的作用自然就是用来获取\meta{字符}所对应的编码，对于一些在“|`|”后直接输入会产生误解的字符，比如\verb|%|（会注释掉其后内容）、|^^M|（会生成一个空格并忽略掉其右侧的所有字符）等，就只能使用|`\|\meta{字符}来获取\meta{字符}的编码（|\|用于将\meta{字符}转义）。实际上，由前面两种方式获得的字符编码是一个数字，其不能单独使用，可以使用\tn{number}\meta{数字}命令（用于显示其后\meta{数字}所对应的十进制数值）来配合查看字符的编码，比如：
+\begin{tcblatexexample}
+% 空格的十进制编码为32
+\par \number`^^M abc % ^^M会产生一个空格并忽略掉其右侧的abc,得到\number` ，`给出的是空格的编码
+\par \number`\^^M abc % 直接得到^^M的字符编码，再转化为十进制输出，并在后面跟上abc
+% \par \number`% abc % 直接报错，因为`后面啥都没有，包括空格
+\par \number`\% abc % 直接得到%的字符编码，再转化为十进制输出，并在后面跟上abc
+\end{tcblatexexample}
+\noindent 以上操作是通过字符来获得其编码，当然也可以反过来，通过编码来获取相应的字符，这需要用到如下命令：
+\begin{latexsyntax}
+  \char<字符编码>
+  <字符编码>的格式为：`\<字符>、`<字符> 或 <字符编码>的十进制、八进制、十六进制
+\end{latexsyntax}
+\hypertarget{apdx:charcode}{}
+该命令的作用是根据\meta{字符编码}以当前字体生成相应的字符。\meta{字符编码}即可以用十进制数、八进制数或十六进制数表示，也可以用|`\|\meta{字符} 或 |`|\meta{字符}表示（比如：\tn{char}|97|、\tn{char}|'141|、\tn{char}|"61|、\tn{char}|`\a|、\tn{char}|`a|都可以得到字母a）。需要注意的是，由该命令生成的字符不具备类代码所赋予的作用（或者说没有类别码），比如|\char92 large|得到的“\char92large”仅是一个字符串而非字体放大命令。
+言归正传，接下来看\tn{catcode}命令的用法，可以用它重新设定任何字符的类别码，
+利用这种方式可以改变\TeX 原本的语法，比如：
+\begin{tcblatexexample}
+% 将左右中括号分别设置为组开始符和组结束符
+\catcode`\[=1
+\catcode`\]=2
+% 那么以下三个命令是等效的：
+\par abc\textbf[def]
+\par abc\textbf[def}
+\par abc\textbf{def}
+% 都可以将“def”加粗：
+\end{tcblatexexample}
+\noindent
+此外，有一种典型的用法是，先把字符设置为活动符（也就是允许将该字符定义为一个宏），再把该字符直接定义为宏（若\TeX 碰到一个未定义的活动字符，它会报错），比如\cite{刘海洋2013latex入门}：
+\begin{tcblatexexample}
+% 先将"定义为一个活动符（也就是将其类别码设置为13）：
+\catcode`\"=\active % \active的定义为：\chardef\active=13
+% 再将"定义为一个命令：
+\def"#1"{\textbf{#1}}
+% 如下操作：
+This is an "important" usage.
+% 将会得到：
+\end{tcblatexexample}
+\noindent
+还有一种常见的用法是将字符|@|从其他类别切换为字母类别，从而让|@|可以作为字母出现在控制序列名中（用于\LaTeX 的内部命令），完事后再将它切换为其他类别，此操作通常使用\tn{makeatletter}和\tn{makeatother}这两个命令来完成，它们的定义如下：
+\begin{latexexample}[rulecolor=\color{yellow}]
+  \def\makeatletter{\catcode`\@=11\relax}
+  \def\makeatother{\catcode`\@=12\relax}
+\end{latexexample}
+\noindent
+还可使用\tn{catcode}来查看字符的类别码，这一操作需要配合数字操作命令来完成，举例说明如下：
+\begin{tcblatexexample}
+\par \number\catcode`\{
+\par \number\catcode`\}
+\par \number\catcode`&
+\par \number\catcode`#
+\par \number\catcode`^
+\par \number\catcode`\%
+\end{tcblatexexample}
+
+对于表\ref{tab:catcode}中出现的|^^|\meta{字符}，其表示的是与该\meta{字符}的ASCII码绝对值相差64的另一个字符，具体来说就是：
+\begin{itemize}
+  \item  若$0 \le ASCII_{\meta{字符}} <64$，则 $ASCII_{\meta{另一字符}}= ASCII_{\meta{字符}}+64$；
+  \item 若 $64 \le ASCII_{\meta{字符}} \le 127$，则$ASCII_{\meta{另一字符}}= ASCII_{\meta{字符}}-64$。
+\end{itemize}
+另外，还可使用连续两个上标符（|^^|）后跟两个\textbf{小写}十六进制数字（0,1,...,9,a,b,...,f）来表示任意ASCII字符，即具有这种形式：|^^xy|（|xy|代表字符的十六进制ASCII码）。利用“|^^|”这一特性，可以方便地调用一些用户无法直接输入的字符或是不可见的控制符（对应于某一种数据控制功能，比如|^^M|可调用回车符；|^^J|可调用换行符）。
+最后注意，\TeX 会优先对后面这种情况（小写十六进制数字）进行解释，因此若想用前一种方式（|^^|\meta{字符}）得到某个字符，则最好不要在|^^|\meta{字符}后面紧跟着一个小写十六进制数字（尤其是在|^^|后跟的\meta{字符}是0,1,...,9,a,b,...,f这些情况下），以免得到错误的解释，比如：
+\begin{tcblatexexample}
+% 若想得到va，分别使用如下代码：
+\par    ^^6a  % 将会得到：j (其ASCII码为6A)
+\par    ^^6 a % 将会得到：v a
+% 具体输出如下：
+\end{tcblatexexample}
+
+
+
+\end{document}

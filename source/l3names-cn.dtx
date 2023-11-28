@@ -1,0 +1,1554 @@
+% \iffalse meta-comment
+%
+%% File: l3names-cn.dtx
+%
+% Copyright (C) 2023 by Yu Du <3531243657@qq.com>
+% 
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either
+% version 1.3c of this license or (at your option) any later
+% version. The latest version of this license is in:
+% 
+%   http://www.latex-project.org/lppl.txt
+% 
+% and version 1.3 or later is part of all distributions of
+% LaTeX version 2005/12/01 or later. 
+%
+%<*driver>
+\documentclass[full,kernel]{l3doc}
+\usepackage{ctex}
+\input{../set/codeset.tex}
+\input{../set/indexset.tex}
+\ExplSyntaxOn
+\legacy_if_set_true:n{names}
+\ExplSyntaxOff
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \title{^^A
+%   \pkg{l3names}宏包——\textbf{原语的名字空间（Namespace for primitives）}^^A
+% }
+%
+% \author{^^A
+%  \LaTeX{}项目组【著】\thanks
+%    {^^A
+%      E-mail:
+%        \href{mailto:latex-team@latex-project.org}
+%          {latex-team@latex-project.org}^^A
+%    }\\
+%  dyu【译】\thanks{E-mail: 3531243657@qq.com}
+% }
+%
+% \date{分发于2023-11-09}
+% 
+% \ifnames
+% \maketitle
+% \fi
+%
+% \begin{documentation}
+%
+% \ifnames
+%
+% \section{设置\LaTeX3编程语言}
+% 
+% 该模块是\LaTeX3编程语言的核心。它执行以下任务：
+% \begin{itemize}
+%   \item 为所有\TeX{}原语定义新名称；
+%   \item 模拟\LuaTeX{}中默认未提供的所需原语;
+%   \item 切换到用于编程的类别码制。
+% \end{itemize}
+% 该模块完全针对于原语（以及这些原语的模拟），它们不应在内核代码之外被使用，
+% 故此处没有对它们进行说明。有关原语的详细信息，请参阅《The \TeX{}book》、
+% 《\TeX{} by Topic》以及\pdfTeX{}、\XeTeX{}、\LuaTeX{}、\pTeX{}和\upTeX{} 
+% 手册。这些原语都基于其名称使用\cs[no-index]{tex_\meta{名称}:D}
+% 这种形式进行了封装，通常基于\pdfTeX{}中原语的\meta{名称}，当原语与pdf
+% 输出无关时，则省略前导的|pdf|。
+% \else
+% \pkg{l3names}模块将所有\TeX{}原语都基于其名称使用
+% \cs[no-index]{tex_\meta{\TeX{}原语名称}:D}这种形式进行了封装
+% （让其符合\LaTeX3语法），它们不应在内核代码之外被使用
+% （当然这不是绝对的，有时候会不可避免的使用到它们）。
+% \fi
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{\pkg{l3names}实现原理}
+%
+%    \begin{macrocode}
+%<*package&tex>
+%    \end{macrocode}
+%
+% 此处的模块名为：\texttt{kernel}，后续采用|@@|来代替该模块私有函数的前缀
+% |__kernel|。当要保留|@@|原意时，可以使用|@@@@|来代替。
+%    \begin{macrocode}
+%<@@=kernel>
+%    \end{macrocode}
+%
+% 这里的代码只是将所有的原语重命名为新的内部名称。
+%
+% 首先手动重命名\tn{let}原语，因为后续整个过程都需要用到它。其次是\tn{global}，
+% 这样可以避免在哈希表中留下不必要的csname。
+%    \begin{macrocode}
+\let \tex_global:D \global
+\let \tex_let:D    \let
+%    \end{macrocode}
+%
+% 所有内容都位于一个（相当长的）组内，故\cs{@@_primitive:NN}的作用范围是受限的。
+%    \begin{macrocode}
+\begingroup
+%    \end{macrocode}
+%
+% \begin{macro}{\@@_primitive:NN}
+% 实际执行重命名操作的临时函数。
+%    \begin{macrocode}
+  \long \def \@@_primitive:NN #1#2
+    { \tex_global:D \tex_let:D #2 #1 }
+%    \end{macrocode}
+%\end{macro}
+%
+% 在DocStrip工具提供的\enquote{guard}中加入\enquote{names}标记（“|*|”
+% 和“|/|”表示标记部分的开始与结束，“\verb`|`”则表示逻辑“或”），
+% 以允许单独提取这部分内容。
+%    \begin{macrocode}
+%</package&tex>
+%<*names|tex>
+%<*names|package>
+%    \end{macrocode}
+% 在这个宏包的当前版本中，所有\TeX{}原语都被赋予了形如|\tex_|\emph{oldname}|:D|
+% 的新名称。另外，在开始重命名时先对原始名称为符号形式的三个特殊情况进行处理，
+% 以便可以在不使用类别码技巧的情况下输入它们。
+%    \begin{macrocode}
+  \@@_primitive:NN \                      \tex_space:D
+  \@@_primitive:NN \/                     \tex_italiccorrection:D
+  \@@_primitive:NN \-                     \tex_hyphen:D
+%    \end{macrocode}
+%
+% 接下来是其他所有原语的重命名。
+%    \begin{macrocode}
+  \@@_primitive:NN \above                 \tex_above:D
+  \@@_primitive:NN \abovedisplayshortskip \tex_abovedisplayshortskip:D
+  \@@_primitive:NN \abovedisplayskip      \tex_abovedisplayskip:D
+  \@@_primitive:NN \abovewithdelims       \tex_abovewithdelims:D
+  \@@_primitive:NN \accent                \tex_accent:D
+  \@@_primitive:NN \adjdemerits           \tex_adjdemerits:D
+  \@@_primitive:NN \advance               \tex_advance:D
+  \@@_primitive:NN \afterassignment       \tex_afterassignment:D
+  \@@_primitive:NN \aftergroup            \tex_aftergroup:D
+  \@@_primitive:NN \atop                  \tex_atop:D
+  \@@_primitive:NN \atopwithdelims        \tex_atopwithdelims:D
+  \@@_primitive:NN \badness               \tex_badness:D
+  \@@_primitive:NN \baselineskip          \tex_baselineskip:D
+  \@@_primitive:NN \batchmode             \tex_batchmode:D
+  \@@_primitive:NN \begingroup            \tex_begingroup:D
+  \@@_primitive:NN \belowdisplayshortskip \tex_belowdisplayshortskip:D
+  \@@_primitive:NN \belowdisplayskip      \tex_belowdisplayskip:D
+  \@@_primitive:NN \binoppenalty          \tex_binoppenalty:D
+  \@@_primitive:NN \botmark               \tex_botmark:D
+  \@@_primitive:NN \box                   \tex_box:D
+  \@@_primitive:NN \boxmaxdepth           \tex_boxmaxdepth:D
+  \@@_primitive:NN \brokenpenalty         \tex_brokenpenalty:D
+  \@@_primitive:NN \catcode               \tex_catcode:D
+  \@@_primitive:NN \char                  \tex_char:D
+  \@@_primitive:NN \chardef               \tex_chardef:D
+  \@@_primitive:NN \cleaders              \tex_cleaders:D
+  \@@_primitive:NN \closein               \tex_closein:D
+  \@@_primitive:NN \closeout              \tex_closeout:D
+  \@@_primitive:NN \clubpenalty           \tex_clubpenalty:D
+  \@@_primitive:NN \copy                  \tex_copy:D
+  \@@_primitive:NN \count                 \tex_count:D
+  \@@_primitive:NN \countdef              \tex_countdef:D
+  \@@_primitive:NN \cr                    \tex_cr:D
+  \@@_primitive:NN \crcr                  \tex_crcr:D
+  \@@_primitive:NN \csname                \tex_csname:D
+  \@@_primitive:NN \day                   \tex_day:D
+  \@@_primitive:NN \deadcycles            \tex_deadcycles:D
+  \@@_primitive:NN \def                   \tex_def:D
+  \@@_primitive:NN \defaulthyphenchar     \tex_defaulthyphenchar:D
+  \@@_primitive:NN \defaultskewchar       \tex_defaultskewchar:D
+  \@@_primitive:NN \delcode               \tex_delcode:D
+  \@@_primitive:NN \delimiter             \tex_delimiter:D
+  \@@_primitive:NN \delimiterfactor       \tex_delimiterfactor:D
+  \@@_primitive:NN \delimitershortfall    \tex_delimitershortfall:D
+  \@@_primitive:NN \dimen                 \tex_dimen:D
+  \@@_primitive:NN \dimendef              \tex_dimendef:D
+  \@@_primitive:NN \discretionary         \tex_discretionary:D
+  \@@_primitive:NN \displayindent         \tex_displayindent:D
+  \@@_primitive:NN \displaylimits         \tex_displaylimits:D
+  \@@_primitive:NN \displaystyle          \tex_displaystyle:D
+  \@@_primitive:NN \displaywidowpenalty   \tex_displaywidowpenalty:D
+  \@@_primitive:NN \displaywidth          \tex_displaywidth:D
+  \@@_primitive:NN \divide                \tex_divide:D
+  \@@_primitive:NN \doublehyphendemerits  \tex_doublehyphendemerits:D
+  \@@_primitive:NN \dp                    \tex_dp:D
+  \@@_primitive:NN \dump                  \tex_dump:D
+  \@@_primitive:NN \edef                  \tex_edef:D
+  \@@_primitive:NN \else                  \tex_else:D
+  \@@_primitive:NN \emergencystretch      \tex_emergencystretch:D
+  \@@_primitive:NN \end                   \tex_end:D
+  \@@_primitive:NN \endcsname             \tex_endcsname:D
+  \@@_primitive:NN \endgroup              \tex_endgroup:D
+  \@@_primitive:NN \endinput              \tex_endinput:D
+  \@@_primitive:NN \endlinechar           \tex_endlinechar:D
+  \@@_primitive:NN \eqno                  \tex_eqno:D
+  \@@_primitive:NN \errhelp               \tex_errhelp:D
+  \@@_primitive:NN \errmessage            \tex_errmessage:D
+  \@@_primitive:NN \errorcontextlines     \tex_errorcontextlines:D
+  \@@_primitive:NN \errorstopmode         \tex_errorstopmode:D
+  \@@_primitive:NN \escapechar            \tex_escapechar:D
+  \@@_primitive:NN \everycr               \tex_everycr:D
+  \@@_primitive:NN \everydisplay          \tex_everydisplay:D
+  \@@_primitive:NN \everyhbox             \tex_everyhbox:D
+  \@@_primitive:NN \everyjob              \tex_everyjob:D
+  \@@_primitive:NN \everymath             \tex_everymath:D
+  \@@_primitive:NN \everypar              \tex_everypar:D
+  \@@_primitive:NN \everyvbox             \tex_everyvbox:D
+  \@@_primitive:NN \exhyphenpenalty       \tex_exhyphenpenalty:D
+  \@@_primitive:NN \expandafter           \tex_expandafter:D
+  \@@_primitive:NN \fam                   \tex_fam:D
+  \@@_primitive:NN \fi                    \tex_fi:D
+  \@@_primitive:NN \finalhyphendemerits   \tex_finalhyphendemerits:D
+  \@@_primitive:NN \firstmark             \tex_firstmark:D
+  \@@_primitive:NN \floatingpenalty       \tex_floatingpenalty:D
+  \@@_primitive:NN \font                  \tex_font:D
+  \@@_primitive:NN \fontdimen             \tex_fontdimen:D
+  \@@_primitive:NN \fontname              \tex_fontname:D
+  \@@_primitive:NN \futurelet             \tex_futurelet:D
+  \@@_primitive:NN \gdef                  \tex_gdef:D
+  \@@_primitive:NN \global                \tex_global:D
+  \@@_primitive:NN \globaldefs            \tex_globaldefs:D
+  \@@_primitive:NN \halign                \tex_halign:D
+  \@@_primitive:NN \hangafter             \tex_hangafter:D
+  \@@_primitive:NN \hangindent            \tex_hangindent:D
+  \@@_primitive:NN \hbadness              \tex_hbadness:D
+  \@@_primitive:NN \hbox                  \tex_hbox:D
+  \@@_primitive:NN \hfil                  \tex_hfil:D
+  \@@_primitive:NN \hfill                 \tex_hfill:D
+  \@@_primitive:NN \hfilneg               \tex_hfilneg:D
+  \@@_primitive:NN \hfuzz                 \tex_hfuzz:D
+  \@@_primitive:NN \hoffset               \tex_hoffset:D
+  \@@_primitive:NN \holdinginserts        \tex_holdinginserts:D
+  \@@_primitive:NN \hrule                 \tex_hrule:D
+  \@@_primitive:NN \hsize                 \tex_hsize:D
+  \@@_primitive:NN \hskip                 \tex_hskip:D
+  \@@_primitive:NN \hss                   \tex_hss:D
+  \@@_primitive:NN \ht                    \tex_ht:D
+  \@@_primitive:NN \hyphenation           \tex_hyphenation:D
+  \@@_primitive:NN \hyphenchar            \tex_hyphenchar:D
+  \@@_primitive:NN \hyphenpenalty         \tex_hyphenpenalty:D
+  \@@_primitive:NN \if                    \tex_if:D
+  \@@_primitive:NN \ifcase                \tex_ifcase:D
+  \@@_primitive:NN \ifcat                 \tex_ifcat:D
+  \@@_primitive:NN \ifdim                 \tex_ifdim:D
+  \@@_primitive:NN \ifeof                 \tex_ifeof:D
+  \@@_primitive:NN \iffalse               \tex_iffalse:D
+  \@@_primitive:NN \ifhbox                \tex_ifhbox:D
+  \@@_primitive:NN \ifhmode               \tex_ifhmode:D
+  \@@_primitive:NN \ifinner               \tex_ifinner:D
+  \@@_primitive:NN \ifmmode               \tex_ifmmode:D
+  \@@_primitive:NN \ifnum                 \tex_ifnum:D
+  \@@_primitive:NN \ifodd                 \tex_ifodd:D
+  \@@_primitive:NN \iftrue                \tex_iftrue:D
+  \@@_primitive:NN \ifvbox                \tex_ifvbox:D
+  \@@_primitive:NN \ifvmode               \tex_ifvmode:D
+  \@@_primitive:NN \ifvoid                \tex_ifvoid:D
+  \@@_primitive:NN \ifx                   \tex_ifx:D
+  \@@_primitive:NN \ignorespaces          \tex_ignorespaces:D
+  \@@_primitive:NN \immediate             \tex_immediate:D
+  \@@_primitive:NN \indent                \tex_indent:D
+  \@@_primitive:NN \input                 \tex_input:D
+  \@@_primitive:NN \inputlineno           \tex_inputlineno:D
+  \@@_primitive:NN \insert                \tex_insert:D
+  \@@_primitive:NN \insertpenalties       \tex_insertpenalties:D
+  \@@_primitive:NN \interlinepenalty      \tex_interlinepenalty:D
+  \@@_primitive:NN \jobname               \tex_jobname:D
+  \@@_primitive:NN \kern                  \tex_kern:D
+  \@@_primitive:NN \language              \tex_language:D
+  \@@_primitive:NN \lastbox               \tex_lastbox:D
+  \@@_primitive:NN \lastkern              \tex_lastkern:D
+  \@@_primitive:NN \lastpenalty           \tex_lastpenalty:D
+  \@@_primitive:NN \lastskip              \tex_lastskip:D
+  \@@_primitive:NN \lccode                \tex_lccode:D
+  \@@_primitive:NN \leaders               \tex_leaders:D
+  \@@_primitive:NN \left                  \tex_left:D
+  \@@_primitive:NN \lefthyphenmin         \tex_lefthyphenmin:D
+  \@@_primitive:NN \leftskip              \tex_leftskip:D
+  \@@_primitive:NN \leqno                 \tex_leqno:D
+  \@@_primitive:NN \let                   \tex_let:D
+  \@@_primitive:NN \limits                \tex_limits:D
+  \@@_primitive:NN \linepenalty           \tex_linepenalty:D
+  \@@_primitive:NN \lineskip              \tex_lineskip:D
+  \@@_primitive:NN \lineskiplimit         \tex_lineskiplimit:D
+  \@@_primitive:NN \long                  \tex_long:D
+  \@@_primitive:NN \looseness             \tex_looseness:D
+  \@@_primitive:NN \lower                 \tex_lower:D
+  \@@_primitive:NN \lowercase             \tex_lowercase:D
+  \@@_primitive:NN \mag                   \tex_mag:D
+  \@@_primitive:NN \mark                  \tex_mark:D
+  \@@_primitive:NN \mathaccent            \tex_mathaccent:D
+  \@@_primitive:NN \mathbin               \tex_mathbin:D
+  \@@_primitive:NN \mathchar              \tex_mathchar:D
+  \@@_primitive:NN \mathchardef           \tex_mathchardef:D
+  \@@_primitive:NN \mathchoice            \tex_mathchoice:D
+  \@@_primitive:NN \mathclose             \tex_mathclose:D
+  \@@_primitive:NN \mathcode              \tex_mathcode:D
+  \@@_primitive:NN \mathinner             \tex_mathinner:D
+  \@@_primitive:NN \mathop                \tex_mathop:D
+  \@@_primitive:NN \mathopen              \tex_mathopen:D
+  \@@_primitive:NN \mathord               \tex_mathord:D
+  \@@_primitive:NN \mathpunct             \tex_mathpunct:D
+  \@@_primitive:NN \mathrel               \tex_mathrel:D
+  \@@_primitive:NN \mathsurround          \tex_mathsurround:D
+  \@@_primitive:NN \maxdeadcycles         \tex_maxdeadcycles:D
+  \@@_primitive:NN \maxdepth              \tex_maxdepth:D
+  \@@_primitive:NN \meaning               \tex_meaning:D
+  \@@_primitive:NN \medmuskip             \tex_medmuskip:D
+  \@@_primitive:NN \message               \tex_message:D
+  \@@_primitive:NN \mkern                 \tex_mkern:D
+  \@@_primitive:NN \month                 \tex_month:D
+  \@@_primitive:NN \moveleft              \tex_moveleft:D
+  \@@_primitive:NN \moveright             \tex_moveright:D
+  \@@_primitive:NN \mskip                 \tex_mskip:D
+  \@@_primitive:NN \multiply              \tex_multiply:D
+  \@@_primitive:NN \muskip                \tex_muskip:D
+  \@@_primitive:NN \muskipdef             \tex_muskipdef:D
+  \@@_primitive:NN \newlinechar           \tex_newlinechar:D
+  \@@_primitive:NN \noalign               \tex_noalign:D
+  \@@_primitive:NN \noboundary            \tex_noboundary:D
+  \@@_primitive:NN \noexpand              \tex_noexpand:D
+  \@@_primitive:NN \noindent              \tex_noindent:D
+  \@@_primitive:NN \nolimits              \tex_nolimits:D
+  \@@_primitive:NN \nonscript             \tex_nonscript:D
+  \@@_primitive:NN \nonstopmode           \tex_nonstopmode:D
+  \@@_primitive:NN \nulldelimiterspace    \tex_nulldelimiterspace:D
+  \@@_primitive:NN \nullfont              \tex_nullfont:D
+  \@@_primitive:NN \number                \tex_number:D
+  \@@_primitive:NN \omit                  \tex_omit:D
+  \@@_primitive:NN \openin                \tex_openin:D
+  \@@_primitive:NN \openout               \tex_openout:D
+  \@@_primitive:NN \or                    \tex_or:D
+  \@@_primitive:NN \outer                 \tex_outer:D
+  \@@_primitive:NN \output                \tex_output:D
+  \@@_primitive:NN \outputpenalty         \tex_outputpenalty:D
+  \@@_primitive:NN \over                  \tex_over:D
+  \@@_primitive:NN \overfullrule          \tex_overfullrule:D
+  \@@_primitive:NN \overline              \tex_overline:D
+  \@@_primitive:NN \overwithdelims        \tex_overwithdelims:D
+  \@@_primitive:NN \pagedepth             \tex_pagedepth:D
+  \@@_primitive:NN \pagefilllstretch      \tex_pagefilllstretch:D
+  \@@_primitive:NN \pagefillstretch       \tex_pagefillstretch:D
+  \@@_primitive:NN \pagefilstretch        \tex_pagefilstretch:D
+  \@@_primitive:NN \pagegoal              \tex_pagegoal:D
+  \@@_primitive:NN \pageshrink            \tex_pageshrink:D
+  \@@_primitive:NN \pagestretch           \tex_pagestretch:D
+  \@@_primitive:NN \pagetotal             \tex_pagetotal:D
+  \@@_primitive:NN \par                   \tex_par:D
+  \@@_primitive:NN \parfillskip           \tex_parfillskip:D
+  \@@_primitive:NN \parindent             \tex_parindent:D
+  \@@_primitive:NN \parshape              \tex_parshape:D
+  \@@_primitive:NN \parskip               \tex_parskip:D
+  \@@_primitive:NN \patterns              \tex_patterns:D
+  \@@_primitive:NN \pausing               \tex_pausing:D
+  \@@_primitive:NN \penalty               \tex_penalty:D
+  \@@_primitive:NN \postdisplaypenalty    \tex_postdisplaypenalty:D
+  \@@_primitive:NN \predisplaypenalty     \tex_predisplaypenalty:D
+  \@@_primitive:NN \predisplaysize        \tex_predisplaysize:D
+  \@@_primitive:NN \pretolerance          \tex_pretolerance:D
+  \@@_primitive:NN \prevdepth             \tex_prevdepth:D
+  \@@_primitive:NN \prevgraf              \tex_prevgraf:D
+  \@@_primitive:NN \radical               \tex_radical:D
+  \@@_primitive:NN \raise                 \tex_raise:D
+  \@@_primitive:NN \read                  \tex_read:D
+  \@@_primitive:NN \relax                 \tex_relax:D
+  \@@_primitive:NN \relpenalty            \tex_relpenalty:D
+  \@@_primitive:NN \right                 \tex_right:D
+  \@@_primitive:NN \righthyphenmin        \tex_righthyphenmin:D
+  \@@_primitive:NN \rightskip             \tex_rightskip:D
+  \@@_primitive:NN \romannumeral          \tex_romannumeral:D
+  \@@_primitive:NN \scriptfont            \tex_scriptfont:D
+  \@@_primitive:NN \scriptscriptfont      \tex_scriptscriptfont:D
+  \@@_primitive:NN \scriptscriptstyle     \tex_scriptscriptstyle:D
+  \@@_primitive:NN \scriptspace           \tex_scriptspace:D
+  \@@_primitive:NN \scriptstyle           \tex_scriptstyle:D
+  \@@_primitive:NN \scrollmode            \tex_scrollmode:D
+  \@@_primitive:NN \setbox                \tex_setbox:D
+  \@@_primitive:NN \setlanguage           \tex_setlanguage:D
+  \@@_primitive:NN \sfcode                \tex_sfcode:D
+  \@@_primitive:NN \shipout               \tex_shipout:D
+  \@@_primitive:NN \show                  \tex_show:D
+  \@@_primitive:NN \showbox               \tex_showbox:D
+  \@@_primitive:NN \showboxbreadth        \tex_showboxbreadth:D
+  \@@_primitive:NN \showboxdepth          \tex_showboxdepth:D
+  \@@_primitive:NN \showlists             \tex_showlists:D
+  \@@_primitive:NN \showthe               \tex_showthe:D
+  \@@_primitive:NN \skewchar              \tex_skewchar:D
+  \@@_primitive:NN \skip                  \tex_skip:D
+  \@@_primitive:NN \skipdef               \tex_skipdef:D
+  \@@_primitive:NN \spacefactor           \tex_spacefactor:D
+  \@@_primitive:NN \spaceskip             \tex_spaceskip:D
+  \@@_primitive:NN \span                  \tex_span:D
+  \@@_primitive:NN \special               \tex_special:D
+  \@@_primitive:NN \splitbotmark          \tex_splitbotmark:D
+  \@@_primitive:NN \splitfirstmark        \tex_splitfirstmark:D
+  \@@_primitive:NN \splitmaxdepth         \tex_splitmaxdepth:D
+  \@@_primitive:NN \splittopskip          \tex_splittopskip:D
+  \@@_primitive:NN \string                \tex_string:D
+  \@@_primitive:NN \tabskip               \tex_tabskip:D
+  \@@_primitive:NN \textfont              \tex_textfont:D
+  \@@_primitive:NN \textstyle             \tex_textstyle:D
+  \@@_primitive:NN \the                   \tex_the:D
+  \@@_primitive:NN \thickmuskip           \tex_thickmuskip:D
+  \@@_primitive:NN \thinmuskip            \tex_thinmuskip:D
+  \@@_primitive:NN \time                  \tex_time:D
+  \@@_primitive:NN \toks                  \tex_toks:D
+  \@@_primitive:NN \toksdef               \tex_toksdef:D
+  \@@_primitive:NN \tolerance             \tex_tolerance:D
+  \@@_primitive:NN \topmark               \tex_topmark:D
+  \@@_primitive:NN \topskip               \tex_topskip:D
+  \@@_primitive:NN \tracingcommands       \tex_tracingcommands:D
+  \@@_primitive:NN \tracinglostchars      \tex_tracinglostchars:D
+  \@@_primitive:NN \tracingmacros         \tex_tracingmacros:D
+  \@@_primitive:NN \tracingonline         \tex_tracingonline:D
+  \@@_primitive:NN \tracingoutput         \tex_tracingoutput:D
+  \@@_primitive:NN \tracingpages          \tex_tracingpages:D
+  \@@_primitive:NN \tracingparagraphs     \tex_tracingparagraphs:D
+  \@@_primitive:NN \tracingrestores       \tex_tracingrestores:D
+  \@@_primitive:NN \tracingstats          \tex_tracingstats:D
+  \@@_primitive:NN \uccode                \tex_uccode:D
+  \@@_primitive:NN \uchyph                \tex_uchyph:D
+  \@@_primitive:NN \underline             \tex_underline:D
+  \@@_primitive:NN \unhbox                \tex_unhbox:D
+  \@@_primitive:NN \unhcopy               \tex_unhcopy:D
+  \@@_primitive:NN \unkern                \tex_unkern:D
+  \@@_primitive:NN \unpenalty             \tex_unpenalty:D
+  \@@_primitive:NN \unskip                \tex_unskip:D
+  \@@_primitive:NN \unvbox                \tex_unvbox:D
+  \@@_primitive:NN \unvcopy               \tex_unvcopy:D
+  \@@_primitive:NN \uppercase             \tex_uppercase:D
+  \@@_primitive:NN \vadjust               \tex_vadjust:D
+  \@@_primitive:NN \valign                \tex_valign:D
+  \@@_primitive:NN \vbadness              \tex_vbadness:D
+  \@@_primitive:NN \vbox                  \tex_vbox:D
+  \@@_primitive:NN \vcenter               \tex_vcenter:D
+  \@@_primitive:NN \vfil                  \tex_vfil:D
+  \@@_primitive:NN \vfill                 \tex_vfill:D
+  \@@_primitive:NN \vfilneg               \tex_vfilneg:D
+  \@@_primitive:NN \vfuzz                 \tex_vfuzz:D
+  \@@_primitive:NN \voffset               \tex_voffset:D
+  \@@_primitive:NN \vrule                 \tex_vrule:D
+  \@@_primitive:NN \vsize                 \tex_vsize:D
+  \@@_primitive:NN \vskip                 \tex_vskip:D
+  \@@_primitive:NN \vsplit                \tex_vsplit:D
+  \@@_primitive:NN \vss                   \tex_vss:D
+  \@@_primitive:NN \vtop                  \tex_vtop:D
+  \@@_primitive:NN \wd                    \tex_wd:D
+  \@@_primitive:NN \widowpenalty          \tex_widowpenalty:D
+  \@@_primitive:NN \write                 \tex_write:D
+  \@@_primitive:NN \xdef                  \tex_xdef:D
+  \@@_primitive:NN \xleaders              \tex_xleaders:D
+  \@@_primitive:NN \xspaceskip            \tex_xspaceskip:D
+  \@@_primitive:NN \year                  \tex_year:D
+%    \end{macrocode}
+% \eTeX{}中引入的原语。
+%    \begin{macrocode}
+  \@@_primitive:NN \beginL                \tex_beginL:D
+  \@@_primitive:NN \beginR                \tex_beginR:D
+  \@@_primitive:NN \botmarks              \tex_botmarks:D
+  \@@_primitive:NN \clubpenalties         \tex_clubpenalties:D
+  \@@_primitive:NN \currentgrouplevel     \tex_currentgrouplevel:D
+  \@@_primitive:NN \currentgrouptype      \tex_currentgrouptype:D
+  \@@_primitive:NN \currentifbranch       \tex_currentifbranch:D
+  \@@_primitive:NN \currentiflevel        \tex_currentiflevel:D
+  \@@_primitive:NN \currentiftype         \tex_currentiftype:D
+  \@@_primitive:NN \detokenize            \tex_detokenize:D
+  \@@_primitive:NN \dimexpr               \tex_dimexpr:D
+  \@@_primitive:NN \displaywidowpenalties \tex_displaywidowpenalties:D
+  \@@_primitive:NN \endL                  \tex_endL:D
+  \@@_primitive:NN \endR                  \tex_endR:D
+  \@@_primitive:NN \eTeXrevision          \tex_eTeXrevision:D
+  \@@_primitive:NN \eTeXversion           \tex_eTeXversion:D
+  \@@_primitive:NN \everyeof              \tex_everyeof:D
+  \@@_primitive:NN \firstmarks            \tex_firstmarks:D
+  \@@_primitive:NN \fontchardp            \tex_fontchardp:D
+  \@@_primitive:NN \fontcharht            \tex_fontcharht:D
+  \@@_primitive:NN \fontcharic            \tex_fontcharic:D
+  \@@_primitive:NN \fontcharwd            \tex_fontcharwd:D
+  \@@_primitive:NN \glueexpr              \tex_glueexpr:D
+  \@@_primitive:NN \glueshrink            \tex_glueshrink:D
+  \@@_primitive:NN \glueshrinkorder       \tex_glueshrinkorder:D
+  \@@_primitive:NN \gluestretch           \tex_gluestretch:D
+  \@@_primitive:NN \gluestretchorder      \tex_gluestretchorder:D
+  \@@_primitive:NN \gluetomu              \tex_gluetomu:D
+  \@@_primitive:NN \ifcsname              \tex_ifcsname:D
+  \@@_primitive:NN \ifdefined             \tex_ifdefined:D
+  \@@_primitive:NN \iffontchar            \tex_iffontchar:D
+  \@@_primitive:NN \interactionmode       \tex_interactionmode:D
+  \@@_primitive:NN \interlinepenalties    \tex_interlinepenalties:D
+  \@@_primitive:NN \lastlinefit           \tex_lastlinefit:D
+  \@@_primitive:NN \lastnodetype          \tex_lastnodetype:D
+  \@@_primitive:NN \marks                 \tex_marks:D
+  \@@_primitive:NN \middle                \tex_middle:D
+  \@@_primitive:NN \muexpr                \tex_muexpr:D
+  \@@_primitive:NN \mutoglue              \tex_mutoglue:D
+  \@@_primitive:NN \numexpr               \tex_numexpr:D
+  \@@_primitive:NN \pagediscards          \tex_pagediscards:D
+  \@@_primitive:NN \parshapedimen         \tex_parshapedimen:D
+  \@@_primitive:NN \parshapeindent        \tex_parshapeindent:D
+  \@@_primitive:NN \parshapelength        \tex_parshapelength:D
+  \@@_primitive:NN \predisplaydirection   \tex_predisplaydirection:D
+  \@@_primitive:NN \protected             \tex_protected:D
+  \@@_primitive:NN \readline              \tex_readline:D
+  \@@_primitive:NN \savinghyphcodes       \tex_savinghyphcodes:D
+  \@@_primitive:NN \savingvdiscards       \tex_savingvdiscards:D
+  \@@_primitive:NN \scantokens            \tex_scantokens:D
+  \@@_primitive:NN \showgroups            \tex_showgroups:D
+  \@@_primitive:NN \showifs               \tex_showifs:D
+  \@@_primitive:NN \showtokens            \tex_showtokens:D
+  \@@_primitive:NN \splitbotmarks         \tex_splitbotmarks:D
+  \@@_primitive:NN \splitdiscards         \tex_splitdiscards:D
+  \@@_primitive:NN \splitfirstmarks       \tex_splitfirstmarks:D
+  \@@_primitive:NN \TeXXeTstate           \tex_TeXXeTstate:D
+  \@@_primitive:NN \topmarks              \tex_topmarks:D
+  \@@_primitive:NN \tracingassigns        \tex_tracingassigns:D
+  \@@_primitive:NN \tracinggroups         \tex_tracinggroups:D
+  \@@_primitive:NN \tracingifs            \tex_tracingifs:D
+  \@@_primitive:NN \tracingnesting        \tex_tracingnesting:D
+  \@@_primitive:NN \tracingscantokens     \tex_tracingscantokens:D
+  \@@_primitive:NN \unexpanded            \tex_unexpanded:D
+  \@@_primitive:NN \unless                \tex_unless:D
+  \@@_primitive:NN \widowpenalties        \tex_widowpenalties:D
+%    \end{macrocode}
+% 接下来的\eTeX{}中的原语名称在所有引擎中并不总是相同的（如果它们确实可以在不同引擎
+% 中使用的话）。因此，我们采取的方法是选择最短的有意义的名称。我们首先处理由
+% \pdfTeX{}引入的与PDF输出直接相关的原语：原样复制这些原语名称。
+%    \begin{macrocode}
+  \@@_primitive:NN \pdfannot              \tex_pdfannot:D
+  \@@_primitive:NN \pdfcatalog            \tex_pdfcatalog:D
+  \@@_primitive:NN \pdfcompresslevel      \tex_pdfcompresslevel:D
+  \@@_primitive:NN \pdfcolorstack         \tex_pdfcolorstack:D
+  \@@_primitive:NN \pdfcolorstackinit     \tex_pdfcolorstackinit:D
+  \@@_primitive:NN \pdfdecimaldigits      \tex_pdfdecimaldigits:D
+  \@@_primitive:NN \pdfdest               \tex_pdfdest:D
+  \@@_primitive:NN \pdfdestmargin         \tex_pdfdestmargin:D
+  \@@_primitive:NN \pdfendlink            \tex_pdfendlink:D
+  \@@_primitive:NN \pdfendthread          \tex_pdfendthread:D
+  \@@_primitive:NN \pdffakespace          \tex_pdffakespace:D
+  \@@_primitive:NN \pdffontattr           \tex_pdffontattr:D
+  \@@_primitive:NN \pdffontname           \tex_pdffontname:D
+  \@@_primitive:NN \pdffontobjnum         \tex_pdffontobjnum:D
+  \@@_primitive:NN \pdfgamma              \tex_pdfgamma:D
+  \@@_primitive:NN \pdfgentounicode       \tex_pdfgentounicode:D
+  \@@_primitive:NN \pdfglyphtounicode     \tex_pdfglyphtounicode:D
+  \@@_primitive:NN \pdfhorigin            \tex_pdfhorigin:D
+  \@@_primitive:NN \pdfimageapplygamma    \tex_pdfimageapplygamma:D
+  \@@_primitive:NN \pdfimagegamma         \tex_pdfimagegamma:D
+  \@@_primitive:NN \pdfimagehicolor       \tex_pdfimagehicolor:D
+  \@@_primitive:NN \pdfimageresolution    \tex_pdfimageresolution:D
+  \@@_primitive:NN \pdfincludechars       \tex_pdfincludechars:D
+  \@@_primitive:NN \pdfinclusioncopyfonts \tex_pdfinclusioncopyfonts:D
+  \@@_primitive:NN \pdfinclusionerrorlevel
+    \tex_pdfinclusionerrorlevel:D
+  \@@_primitive:NN \pdfinfo               \tex_pdfinfo:D
+  \@@_primitive:NN \pdfinfoomitdate       \tex_pdfinfoomitdate:D
+  \@@_primitive:NN \pdfinterwordspaceoff  \tex_pdfinterwordspaceoff:D
+  \@@_primitive:NN \pdfinterwordspaceon   \tex_pdfinterwordspaceon:D
+  \@@_primitive:NN \pdflastannot          \tex_pdflastannot:D
+  \@@_primitive:NN \pdflastlink           \tex_pdflastlink:D
+  \@@_primitive:NN \pdflastobj            \tex_pdflastobj:D
+  \@@_primitive:NN \pdflastxform          \tex_pdflastxform:D
+  \@@_primitive:NN \pdflastximage         \tex_pdflastximage:D
+  \@@_primitive:NN \pdflastximagecolordepth
+    \tex_pdflastximagecolordepth:D
+  \@@_primitive:NN \pdflastximagepages    \tex_pdflastximagepages:D
+  \@@_primitive:NN \pdflinkmargin         \tex_pdflinkmargin:D
+  \@@_primitive:NN \pdfliteral            \tex_pdfliteral:D
+  \@@_primitive:NN \pdfmapfile            \tex_pdfmapfile:D
+  \@@_primitive:NN \pdfmapline            \tex_pdfmapline:D
+  \@@_primitive:NN \pdfmajorversion       \tex_pdfmajorversion:D
+  \@@_primitive:NN \pdfminorversion       \tex_pdfminorversion:D
+  \@@_primitive:NN \pdfnames              \tex_pdfnames:D
+  \@@_primitive:NN \pdfnobuiltintounicode \tex_pdfnobuiltintounicode:D
+  \@@_primitive:NN \pdfobj                \tex_pdfobj:D
+  \@@_primitive:NN \pdfobjcompresslevel   \tex_pdfobjcompresslevel:D
+  \@@_primitive:NN \pdfomitcharset        \tex_pdfomitcharset:D
+  \@@_primitive:NN \pdfoutline            \tex_pdfoutline:D
+  \@@_primitive:NN \pdfoutput             \tex_pdfoutput:D
+  \@@_primitive:NN \pdfpageattr           \tex_pdfpageattr:D
+  \@@_primitive:NN \pdfpagesattr          \tex_pdfpagesattr:D
+  \@@_primitive:NN \pdfpagebox            \tex_pdfpagebox:D
+  \@@_primitive:NN \pdfpageref            \tex_pdfpageref:D
+  \@@_primitive:NN \pdfpageresources      \tex_pdfpageresources:D
+  \@@_primitive:NN \pdfpagesattr          \tex_pdfpagesattr:D
+  \@@_primitive:NN \pdfrefobj             \tex_pdfrefobj:D
+  \@@_primitive:NN \pdfrefxform           \tex_pdfrefxform:D
+  \@@_primitive:NN \pdfrefximage          \tex_pdfrefximage:D
+  \@@_primitive:NN \pdfrestore            \tex_pdfrestore:D
+  \@@_primitive:NN \pdfretval             \tex_pdfretval:D
+  \@@_primitive:NN \pdfrunninglinkoff     \tex_pdfrunninglinkoff:D
+  \@@_primitive:NN \pdfrunninglinkon      \tex_pdfrunninglinkon:D
+  \@@_primitive:NN \pdfsave               \tex_pdfsave:D
+  \@@_primitive:NN \pdfsetmatrix          \tex_pdfsetmatrix:D
+  \@@_primitive:NN \pdfstartlink          \tex_pdfstartlink:D
+  \@@_primitive:NN \pdfstartthread        \tex_pdfstartthread:D
+  \@@_primitive:NN \pdfsuppressptexinfo   \tex_pdfsuppressptexinfo:D
+  \@@_primitive:NN \pdfsuppresswarningdupdest
+    \tex_pdfsuppresswarningdupdest:D
+  \@@_primitive:NN \pdfsuppresswarningdupmap
+    \tex_pdfsuppresswarningdupmap:D
+  \@@_primitive:NN \pdfsuppresswarningpagegroup
+    \tex_pdfsuppresswarningpagegroup:D
+  \@@_primitive:NN \pdfthread             \tex_pdfthread:D
+  \@@_primitive:NN \pdfthreadmargin       \tex_pdfthreadmargin:D
+  \@@_primitive:NN \pdftrailer            \tex_pdftrailer:D
+  \@@_primitive:NN \pdftrailerid          \tex_pdftrailerid:D
+  \@@_primitive:NN \pdfuniqueresname      \tex_pdfuniqueresname:D
+  \@@_primitive:NN \pdfvorigin            \tex_pdfvorigin:D
+  \@@_primitive:NN \pdfxform              \tex_pdfxform:D
+  \@@_primitive:NN \pdfxformname          \tex_pdfxformname:D
+  \@@_primitive:NN \pdfximage             \tex_pdfximage:D
+  \@@_primitive:NN \pdfximagebbox         \tex_pdfximagebbox:D
+%    \end{macrocode}
+% 下述原语与PDF输出无关，或者已经出现在没有|\pdf|前缀的其他引擎中，
+% 或者可能在将来的某个阶段合理地出现。因此，我们在这里删除前导符|pdf|。
+%    \begin{macrocode}
+  \@@_primitive:NN \ifpdfabsdim           \tex_ifabsdim:D
+  \@@_primitive:NN \ifpdfabsnum           \tex_ifabsnum:D
+  \@@_primitive:NN \ifpdfprimitive        \tex_ifprimitive:D
+  \@@_primitive:NN \pdfadjustinterwordglue
+    \tex_adjustinterwordglue:D
+  \@@_primitive:NN \pdfadjustspacing      \tex_adjustspacing:D
+  \@@_primitive:NN \pdfappendkern         \tex_appendkern:D
+  \@@_primitive:NN \pdfcopyfont           \tex_copyfont:D
+  \@@_primitive:NN \pdfcreationdate       \tex_creationdate:D
+  \@@_primitive:NN \pdfdraftmode          \tex_draftmode:D
+  \@@_primitive:NN \pdfeachlinedepth      \tex_eachlinedepth:D
+  \@@_primitive:NN \pdfeachlineheight     \tex_eachlineheight:D
+  \@@_primitive:NN \pdfelapsedtime        \tex_elapsedtime:D
+  \@@_primitive:NN \pdfescapehex          \tex_escapehex:D
+  \@@_primitive:NN \pdfescapename         \tex_escapename:D
+  \@@_primitive:NN \pdfescapestring       \tex_escapestring:D
+  \@@_primitive:NN \pdffirstlineheight    \tex_firstlineheight:D
+  \@@_primitive:NN \pdffontexpand         \tex_fontexpand:D
+  \@@_primitive:NN \pdffontsize           \tex_fontsize:D
+  \@@_primitive:NN \pdfignoreddimen       \tex_ignoreddimen:D
+  \@@_primitive:NN \pdfinsertht           \tex_insertht:D
+  \@@_primitive:NN \pdflastlinedepth      \tex_lastlinedepth:D
+  \@@_primitive:NN \pdflastmatch          \tex_lastmatch:D
+  \@@_primitive:NN \pdflastxpos           \tex_lastxpos:D
+  \@@_primitive:NN \pdflastypos           \tex_lastypos:D
+  \@@_primitive:NN \pdfmatch              \tex_match:D
+  \@@_primitive:NN \pdfnoligatures        \tex_noligatures:D
+  \@@_primitive:NN \pdfnormaldeviate      \tex_normaldeviate:D
+  \@@_primitive:NN \pdfpageheight         \tex_pageheight:D
+  \@@_primitive:NN \pdfpagewidth          \tex_pagewidth:D
+  \@@_primitive:NN \pdfpkmode             \tex_pkmode:D
+  \@@_primitive:NN \pdfpkresolution       \tex_pkresolution:D
+  \@@_primitive:NN \pdfprimitive          \tex_primitive:D
+  \@@_primitive:NN \pdfprependkern        \tex_prependkern:D
+  \@@_primitive:NN \pdfprotrudechars      \tex_protrudechars:D
+  \@@_primitive:NN \pdfpxdimen            \tex_pxdimen:D
+  \@@_primitive:NN \pdfrandomseed         \tex_randomseed:D
+  \@@_primitive:NN \pdfresettimer         \tex_resettimer:D
+  \@@_primitive:NN \pdfsavepos            \tex_savepos:D
+  \@@_primitive:NN \pdfsetrandomseed      \tex_setrandomseed:D
+  \@@_primitive:NN \pdfshellescape        \tex_shellescape:D
+  \@@_primitive:NN \pdftracingfonts       \tex_tracingfonts:D
+  \@@_primitive:NN \pdfunescapehex        \tex_unescapehex:D
+  \@@_primitive:NN \pdfuniformdeviate     \tex_uniformdeviate:D
+%    \end{macrocode}
+% 版本原语与PDF模式无关，而是特定于\pdfTeX{}，因此再次保持不变。
+%    \begin{macrocode}
+  \@@_primitive:NN \pdftexbanner          \tex_pdftexbanner:D
+  \@@_primitive:NN \pdftexrevision        \tex_pdftexrevision:D
+  \@@_primitive:NN \pdftexversion         \tex_pdftexversion:D
+%    \end{macrocode}
+% 下述原语在\pdfTeX{}中出现，但名称中不含“|pdf|”，故无需做任何改变。
+%    \begin{macrocode}
+  \@@_primitive:NN \efcode                \tex_efcode:D
+  \@@_primitive:NN \ifincsname            \tex_ifincsname:D
+  \@@_primitive:NN \knaccode              \tex_knaccode:D
+  \@@_primitive:NN \knbccode              \tex_knbccode:D
+  \@@_primitive:NN \knbscode              \tex_knbscode:D
+  \@@_primitive:NN \leftmarginkern        \tex_leftmarginkern:D
+  \@@_primitive:NN \letterspacefont       \tex_letterspacefont:D
+  \@@_primitive:NN \lpcode                \tex_lpcode:D
+  \@@_primitive:NN \quitvmode             \tex_quitvmode:D
+  \@@_primitive:NN \rightmarginkern       \tex_rightmarginkern:D
+  \@@_primitive:NN \rpcode                \tex_rpcode:D
+  \@@_primitive:NN \shbscode              \tex_shbscode:D
+  \@@_primitive:NN \stbscode              \tex_stbscode:D
+  \@@_primitive:NN \synctex               \tex_synctex:D
+  \@@_primitive:NN \tagcode               \tex_tagcode:D
+%    \end{macrocode}
+% 后续这些\pdfTeX{}中的原语的可用性变得更加复杂。\pdfTeX{}中的一些原语在\XeTeX{}
+% 和\LuaTeX{}中具有不同的名称。特别是对于\LuaTeX{}而言，跟踪所有的这些原语将会很
+% 困难。因此，现在我们只检查原语是否实际存在，然后再保存它们。（注意，从此处开始，
+% \cs{kernel_primitive:NN}还具备检测原语是否存在的功能，若存在，完成重命名，
+% 若不存在，则啥也不做。）
+%    \begin{macrocode}
+%</names|package>
+%<*package>
+  \tex_long:D \tex_def:D \use_ii:nn #1#2 {#2}
+  \tex_long:D \tex_def:D \use_none:n #1 { }
+  \tex_long:D \tex_def:D \@@_primitive:NN #1#2
+    {
+      \tex_ifdefined:D #1
+        \tex_expandafter:D \use_ii:nn
+      \tex_fi:D
+        \use_none:n { \tex_global:D \tex_let:D #2 #1 }
+    }
+%</package>
+%<*names|package>
+%    \end{macrocode}
+% 这里处理一些\pdfTeX{}原语，因为它们在\LuaTeX{}中被删除，但相应的内部名称
+% 稍后会被模拟。Lua代码在此处已经加载，所以我们不应该覆盖它们。
+%    \begin{macrocode}
+  \@@_primitive:NN \pdfstrcmp             \tex_strcmp:D
+  \@@_primitive:NN \pdffilesize           \tex_filesize:D
+  \@@_primitive:NN \pdfmdfivesum          \tex_mdfivesum:D
+  \@@_primitive:NN \pdffilemoddate        \tex_filemoddate:D
+  \@@_primitive:NN \pdffiledump           \tex_filedump:D
+%    \end{macrocode}
+%
+% 下述是\XeTeX{}中特定的原语。请注意， \XeTeX{}的\tn{strcmp}在之前
+%（\pkg{l3bootstrap}模块中）已经处理过，并且被“合并”到了\tn{pdfstrcmp}中。
+% 稍后会处理一些具有跨兼容性但名称中缺少|pdf|的原语。
+%    \begin{macrocode}
+  \@@_primitive:NN \suppressfontnotfounderror
+    \tex_suppressfontnotfounderror:D
+  \@@_primitive:NN \XeTeXcharclass        \tex_XeTeXcharclass:D
+  \@@_primitive:NN \XeTeXcharglyph        \tex_XeTeXcharglyph:D
+  \@@_primitive:NN \XeTeXcountfeatures    \tex_XeTeXcountfeatures:D
+  \@@_primitive:NN \XeTeXcountglyphs      \tex_XeTeXcountglyphs:D
+  \@@_primitive:NN \XeTeXcountselectors   \tex_XeTeXcountselectors:D
+  \@@_primitive:NN \XeTeXcountvariations  \tex_XeTeXcountvariations:D
+  \@@_primitive:NN \XeTeXdefaultencoding  \tex_XeTeXdefaultencoding:D
+  \@@_primitive:NN \XeTeXdashbreakstate   \tex_XeTeXdashbreakstate:D
+  \@@_primitive:NN \XeTeXfeaturecode      \tex_XeTeXfeaturecode:D
+  \@@_primitive:NN \XeTeXfeaturename      \tex_XeTeXfeaturename:D
+  \@@_primitive:NN \XeTeXfindfeaturebyname
+    \tex_XeTeXfindfeaturebyname:D
+  \@@_primitive:NN \XeTeXfindselectorbyname
+    \tex_XeTeXfindselectorbyname:D
+  \@@_primitive:NN \XeTeXfindvariationbyname
+    \tex_XeTeXfindvariationbyname:D
+  \@@_primitive:NN \XeTeXfirstfontchar    \tex_XeTeXfirstfontchar:D
+  \@@_primitive:NN \XeTeXfonttype         \tex_XeTeXfonttype:D
+  \@@_primitive:NN \XeTeXgenerateactualtext
+    \tex_XeTeXgenerateactualtext:D
+  \@@_primitive:NN \XeTeXglyph            \tex_XeTeXglyph:D
+  \@@_primitive:NN \XeTeXglyphbounds      \tex_XeTeXglyphbounds:D
+  \@@_primitive:NN \XeTeXglyphindex       \tex_XeTeXglyphindex:D
+  \@@_primitive:NN \XeTeXglyphname        \tex_XeTeXglyphname:D
+  \@@_primitive:NN \XeTeXinputencoding    \tex_XeTeXinputencoding:D
+  \@@_primitive:NN \XeTeXinputnormalization
+    \tex_XeTeXinputnormalization:D
+  \@@_primitive:NN \XeTeXinterchartokenstate
+    \tex_XeTeXinterchartokenstate:D
+  \@@_primitive:NN \XeTeXinterchartoks    \tex_XeTeXinterchartoks:D
+  \@@_primitive:NN \XeTeXisdefaultselector
+    \tex_XeTeXisdefaultselector:D
+  \@@_primitive:NN \XeTeXisexclusivefeature
+    \tex_XeTeXisexclusivefeature:D
+  \@@_primitive:NN \XeTeXlastfontchar     \tex_XeTeXlastfontchar:D
+  \@@_primitive:NN \XeTeXlinebreakskip    \tex_XeTeXlinebreakskip:D
+  \@@_primitive:NN \XeTeXlinebreaklocale  \tex_XeTeXlinebreaklocale:D
+  \@@_primitive:NN \XeTeXlinebreakpenalty \tex_XeTeXlinebreakpenalty:D
+  \@@_primitive:NN \XeTeXOTcountfeatures  \tex_XeTeXOTcountfeatures:D
+  \@@_primitive:NN \XeTeXOTcountlanguages \tex_XeTeXOTcountlanguages:D
+  \@@_primitive:NN \XeTeXOTcountscripts   \tex_XeTeXOTcountscripts:D
+  \@@_primitive:NN \XeTeXOTfeaturetag     \tex_XeTeXOTfeaturetag:D
+  \@@_primitive:NN \XeTeXOTlanguagetag    \tex_XeTeXOTlanguagetag:D
+  \@@_primitive:NN \XeTeXOTscripttag      \tex_XeTeXOTscripttag:D
+  \@@_primitive:NN \XeTeXpdffile          \tex_XeTeXpdffile:D
+  \@@_primitive:NN \XeTeXpdfpagecount     \tex_XeTeXpdfpagecount:D
+  \@@_primitive:NN \XeTeXpicfile          \tex_XeTeXpicfile:D
+  \@@_primitive:NN \XeTeXrevision         \tex_XeTeXrevision:D
+  \@@_primitive:NN \XeTeXselectorname     \tex_XeTeXselectorname:D
+  \@@_primitive:NN \XeTeXtracingfonts     \tex_XeTeXtracingfonts:D
+  \@@_primitive:NN \XeTeXupwardsmode      \tex_XeTeXupwardsmode:D
+  \@@_primitive:NN \XeTeXuseglyphmetrics  \tex_XeTeXuseglyphmetrics:D
+  \@@_primitive:NN \XeTeXvariation        \tex_XeTeXvariation:D
+  \@@_primitive:NN \XeTeXvariationdefault \tex_XeTeXvariationdefault:D
+  \@@_primitive:NN \XeTeXvariationmax     \tex_XeTeXvariationmax:D
+  \@@_primitive:NN \XeTeXvariationmin     \tex_XeTeXvariationmin:D
+  \@@_primitive:NN \XeTeXvariationname    \tex_XeTeXvariationname:D
+  \@@_primitive:NN \XeTeXversion          \tex_XeTeXversion:D
+  \@@_primitive:NN \XeTeXselectorcode     \tex_XeTeXselectorcode:D
+  \@@_primitive:NN \XeTeXinterwordspaceshaping
+                   \tex_XeTeXinterwordspaceshaping:D
+  \@@_primitive:NN \XeTeXhyphenatablelength
+                   \tex_XeTeXhyphenatablelength:D
+%    \end{macrocode}
+% 来自\pdfTeX{}中的原语（在\XeTeX{}中被重命名）: 同样适用于\LuaTeX{}。
+%    \begin{macrocode}
+  \@@_primitive:NN \creationdate          \tex_creationdate:D
+  \@@_primitive:NN \elapsedtime           \tex_elapsedtime:D
+  \@@_primitive:NN \filedump              \tex_filedump:D
+  \@@_primitive:NN \filemoddate           \tex_filemoddate:D
+  \@@_primitive:NN \filesize              \tex_filesize:D
+  \@@_primitive:NN \mdfivesum             \tex_mdfivesum:D
+  \@@_primitive:NN \ifprimitive           \tex_ifprimitive:D
+  \@@_primitive:NN \primitive             \tex_primitive:D
+  \@@_primitive:NN \resettimer            \tex_resettimer:D
+  \@@_primitive:NN \shellescape           \tex_shellescape:D
+  \@@_primitive:NN \XeTeXprotrudechars    \tex_protrudechars:D
+%    \end{macrocode}
+% \LuaTeX{}中的原语， 其中一些已经被移植到\XeTeX{}。
+%    \begin{macrocode}
+  \@@_primitive:NN \alignmark             \tex_alignmark:D
+  \@@_primitive:NN \aligntab              \tex_aligntab:D
+  \@@_primitive:NN \attribute             \tex_attribute:D
+  \@@_primitive:NN \attributedef          \tex_attributedef:D
+  \@@_primitive:NN \automaticdiscretionary
+    \tex_automaticdiscretionary:D
+  \@@_primitive:NN \automatichyphenmode   \tex_automatichyphenmode:D
+  \@@_primitive:NN \automatichyphenpenalty
+    \tex_automatichyphenpenalty:D
+  \@@_primitive:NN \begincsname           \tex_begincsname:D
+  \@@_primitive:NN \bodydir               \tex_bodydir:D
+  \@@_primitive:NN \bodydirection         \tex_bodydirection:D
+  \@@_primitive:NN \boundary              \tex_boundary:D
+  \@@_primitive:NN \boxdir                \tex_boxdir:D
+  \@@_primitive:NN \boxdirection          \tex_boxdirection:D
+  \@@_primitive:NN \breakafterdirmode     \tex_breakafterdirmode:D
+  \@@_primitive:NN \catcodetable          \tex_catcodetable:D
+  \@@_primitive:NN \clearmarks            \tex_clearmarks:D
+% \@@_primitive:NN \compoundhyphenmode
+%   \tex_compoundhyphenmode:D % not documented in manual
+  \@@_primitive:NN \crampeddisplaystyle   \tex_crampeddisplaystyle:D
+  \@@_primitive:NN \crampedscriptscriptstyle
+    \tex_crampedscriptscriptstyle:D
+  \@@_primitive:NN \crampedscriptstyle    \tex_crampedscriptstyle:D
+  \@@_primitive:NN \crampedtextstyle      \tex_crampedtextstyle:D
+  \@@_primitive:NN \csstring              \tex_csstring:D
+  \@@_primitive:NN \deferred              \tex_deferred:D
+  \@@_primitive:NN \discretionaryligaturemode
+    \tex_discretionaryligaturemode:D
+  \@@_primitive:NN \directlua             \tex_directlua:D
+  \@@_primitive:NN \dviextension          \tex_dviextension:D
+  \@@_primitive:NN \dvifeedback           \tex_dvifeedback:D
+  \@@_primitive:NN \dvivariable           \tex_dvivariable:D
+  \@@_primitive:NN \eTeXglueshrinkorder   \tex_eTeXglueshrinkorder:D
+  \@@_primitive:NN \eTeXgluestretchorder  \tex_eTeXgluestretchorder:D
+  \@@_primitive:NN \endlocalcontrol       \tex_endlocalcontrol:D
+  \@@_primitive:NN \etoksapp              \tex_etoksapp:D
+  \@@_primitive:NN \etokspre              \tex_etokspre:D
+  \@@_primitive:NN \exceptionpenalty      \tex_exceptionpenalty:D
+  \@@_primitive:NN \exhyphenchar          \tex_exhyphenchar:D
+  \@@_primitive:NN \explicithyphenpenalty \tex_explicithyphenpenalty:D
+  \@@_primitive:NN \expanded              \tex_expanded:D
+  \@@_primitive:NN \explicitdiscretionary \tex_explicitdiscretionary:D
+  \@@_primitive:NN \firstvalidlanguage    \tex_firstvalidlanguage:D
+% \@@_primitive:NN \fixupboxesmode
+%   \tex_fixupboxesmode:D % not documented in manual
+  \@@_primitive:NN \fontid                \tex_fontid:D
+  \@@_primitive:NN \formatname            \tex_formatname:D
+  \@@_primitive:NN \hjcode                \tex_hjcode:D
+  \@@_primitive:NN \hpack                 \tex_hpack:D
+  \@@_primitive:NN \hyphenationbounds     \tex_hyphenationbounds:D
+  \@@_primitive:NN \hyphenationmin        \tex_hyphenationmin:D
+  \@@_primitive:NN \hyphenpenaltymode     \tex_hyphenpenaltymode:D
+  \@@_primitive:NN \gleaders              \tex_gleaders:D
+  \@@_primitive:NN \glet                  \tex_glet:D
+  \@@_primitive:NN \glyphdimensionsmode   \tex_glyphdimensionsmode:D
+  \@@_primitive:NN \gtoksapp              \tex_gtoksapp:D
+  \@@_primitive:NN \gtokspre              \tex_gtokspre:D
+  \@@_primitive:NN \ifcondition           \tex_ifcondition:D
+  \@@_primitive:NN \immediateassigned     \tex_immediateassigned:D
+  \@@_primitive:NN \immediateassignment   \tex_immediateassignment:D
+  \@@_primitive:NN \initcatcodetable      \tex_initcatcodetable:D
+  \@@_primitive:NN \lastnamedcs           \tex_lastnamedcs:D
+  \@@_primitive:NN \latelua               \tex_latelua:D
+  \@@_primitive:NN \lateluafunction       \tex_lateluafunction:D
+  \@@_primitive:NN \leftghost             \tex_leftghost:D
+  \@@_primitive:NN \letcharcode           \tex_letcharcode:D
+  \@@_primitive:NN \linedir               \tex_linedir:D
+  \@@_primitive:NN \linedirection         \tex_linedirection:D
+  \@@_primitive:NN \localbrokenpenalty    \tex_localbrokenpenalty:D
+  \@@_primitive:NN \localinterlinepenalty \tex_localinterlinepenalty:D
+  \@@_primitive:NN \luabytecode           \tex_luabytecode:D
+  \@@_primitive:NN \luabytecodecall       \tex_luabytecodecall:D
+  \@@_primitive:NN \luacopyinputnodes     \tex_luacopyinputnodes:D
+  \@@_primitive:NN \luadef                \tex_luadef:D
+  \@@_primitive:NN \localleftbox          \tex_localleftbox:D
+  \@@_primitive:NN \localrightbox         \tex_localrightbox:D
+  \@@_primitive:NN \luaescapestring       \tex_luaescapestring:D
+  \@@_primitive:NN \luafunction           \tex_luafunction:D
+  \@@_primitive:NN \luafunctioncall       \tex_luafunctioncall:D
+  \@@_primitive:NN \luatexbanner          \tex_luatexbanner:D
+  \@@_primitive:NN \luatexrevision        \tex_luatexrevision:D
+  \@@_primitive:NN \luatexversion         \tex_luatexversion:D
+  \@@_primitive:NN \mathdefaultsmode      \tex_mathdefaultsmode:D
+  \@@_primitive:NN \mathdelimitersmode    \tex_mathdelimitersmode:D
+  \@@_primitive:NN \mathdir               \tex_mathdir:D
+  \@@_primitive:NN \mathdirection         \tex_mathdirection:D
+  \@@_primitive:NN \mathdisplayskipmode   \tex_mathdisplayskipmode:D
+  \@@_primitive:NN \matheqdirmode         \tex_matheqdirmode:D
+  \@@_primitive:NN \matheqnogapstep       \tex_matheqnogapstep:D
+  \@@_primitive:NN \mathflattenmode       \tex_mathflattenmode:D
+  \@@_primitive:NN \mathitalicsmode       \tex_mathitalicsmode:D
+  \@@_primitive:NN \mathnolimitsmode      \tex_mathnolimitsmode:D
+  \@@_primitive:NN \mathoption            \tex_mathoption:D
+  \@@_primitive:NN \mathpenaltiesmode     \tex_mathpenaltiesmode:D
+  \@@_primitive:NN \mathrulesfam          \tex_mathrulesfam:D
+% \@@_primitive:NN \mathrulesmode
+%   \tex_mathrulesmode:D % not documented in manual
+% \@@_primitive:NN \mathrulethicknessmode
+%   \tex_mathrulethicknessmode:D % not documented in manual
+  \@@_primitive:NN \mathscriptsmode       \tex_mathscriptsmode:D
+  \@@_primitive:NN \mathscriptboxmode     \tex_mathscriptboxmode:D
+  \@@_primitive:NN \mathscriptcharmode    \tex_mathscriptcharmode:D
+  \@@_primitive:NN \mathstyle             \tex_mathstyle:D
+  \@@_primitive:NN \mathsurroundmode      \tex_mathsurroundmode:D
+  \@@_primitive:NN \mathsurroundskip      \tex_mathsurroundskip:D
+  \@@_primitive:NN \nohrule               \tex_nohrule:D
+  \@@_primitive:NN \nokerns               \tex_nokerns:D
+  \@@_primitive:NN \noligs                \tex_noligs:D
+  \@@_primitive:NN \nospaces              \tex_nospaces:D
+  \@@_primitive:NN \novrule               \tex_novrule:D
+  \@@_primitive:NN \outputbox             \tex_outputbox:D
+  \@@_primitive:NN \pagebottomoffset      \tex_pagebottomoffset:D
+  \@@_primitive:NN \pagedir               \tex_pagedir:D
+  \@@_primitive:NN \pagedirection         \tex_pagedirection:D
+  \@@_primitive:NN \pageleftoffset        \tex_pageleftoffset:D
+  \@@_primitive:NN \pagerightoffset       \tex_pagerightoffset:D
+  \@@_primitive:NN \pagetopoffset         \tex_pagetopoffset:D
+  \@@_primitive:NN \pardir                \tex_pardir:D
+  \@@_primitive:NN \pardirection          \tex_pardirection:D
+  \@@_primitive:NN \pdfextension          \tex_pdfextension:D
+  \@@_primitive:NN \pdffeedback           \tex_pdffeedback:D
+  \@@_primitive:NN \pdfvariable           \tex_pdfvariable:D
+  \@@_primitive:NN \postexhyphenchar      \tex_postexhyphenchar:D
+  \@@_primitive:NN \posthyphenchar        \tex_posthyphenchar:D
+  \@@_primitive:NN \prebinoppenalty       \tex_prebinoppenalty:D
+  \@@_primitive:NN \predisplaygapfactor   \tex_predisplaygapfactor:D
+  \@@_primitive:NN \preexhyphenchar       \tex_preexhyphenchar:D
+  \@@_primitive:NN \prehyphenchar         \tex_prehyphenchar:D
+  \@@_primitive:NN \prerelpenalty         \tex_prerelpenalty:D
+  \@@_primitive:NN \protrusionboundary    \tex_protrusionboundary:D
+  \@@_primitive:NN \rightghost            \tex_rightghost:D
+  \@@_primitive:NN \savecatcodetable      \tex_savecatcodetable:D
+  \@@_primitive:NN \scantextokens         \tex_scantextokens:D
+  \@@_primitive:NN \setfontid             \tex_setfontid:D
+  \@@_primitive:NN \shapemode             \tex_shapemode:D
+  \@@_primitive:NN \suppressifcsnameerror \tex_suppressifcsnameerror:D
+  \@@_primitive:NN \suppresslongerror     \tex_suppresslongerror:D
+  \@@_primitive:NN \suppressmathparerror  \tex_suppressmathparerror:D
+  \@@_primitive:NN \suppressoutererror    \tex_suppressoutererror:D
+  \@@_primitive:NN \suppressprimitiveerror
+    \tex_suppressprimitiveerror:D
+  \@@_primitive:NN \textdir               \tex_textdir:D
+  \@@_primitive:NN \textdirection         \tex_textdirection:D
+  \@@_primitive:NN \toksapp               \tex_toksapp:D
+  \@@_primitive:NN \tokspre               \tex_tokspre:D
+  \@@_primitive:NN \tpack                 \tex_tpack:D
+  \@@_primitive:NN \variablefam           \tex_variablefam:D
+  \@@_primitive:NN \vpack                 \tex_vpack:D
+  \@@_primitive:NN \wordboundary          \tex_wordboundary:D
+  \@@_primitive:NN \xtoksapp              \tex_xtoksapp:D
+  \@@_primitive:NN \xtokspre              \tex_xtokspre:D
+%    \end{macrocode}
+% \pdfTeX{}中的原语（在\LuaTeX{}中被重命名）。
+%    \begin{macrocode}
+  \@@_primitive:NN \adjustspacing         \tex_adjustspacing:D
+  \@@_primitive:NN \copyfont              \tex_copyfont:D
+  \@@_primitive:NN \draftmode             \tex_draftmode:D
+  \@@_primitive:NN \expandglyphsinfont    \tex_fontexpand:D
+  \@@_primitive:NN \ifabsdim              \tex_ifabsdim:D
+  \@@_primitive:NN \ifabsnum              \tex_ifabsnum:D
+  \@@_primitive:NN \ignoreligaturesinfont \tex_ignoreligaturesinfont:D
+  \@@_primitive:NN \insertht              \tex_insertht:D
+  \@@_primitive:NN \lastsavedboxresourceindex
+    \tex_pdflastxform:D
+  \@@_primitive:NN \lastsavedimageresourceindex
+    \tex_pdflastximage:D
+  \@@_primitive:NN \lastsavedimageresourcepages
+    \tex_pdflastximagepages:D
+  \@@_primitive:NN \lastxpos              \tex_lastxpos:D
+  \@@_primitive:NN \lastypos              \tex_lastypos:D
+  \@@_primitive:NN \normaldeviate         \tex_normaldeviate:D
+  \@@_primitive:NN \outputmode            \tex_pdfoutput:D
+  \@@_primitive:NN \pageheight            \tex_pageheight:D
+  \@@_primitive:NN \pagewidth             \tex_pagewidth:D
+  \@@_primitive:NN \protrudechars         \tex_protrudechars:D
+  \@@_primitive:NN \pxdimen               \tex_pxdimen:D
+  \@@_primitive:NN \randomseed            \tex_randomseed:D
+  \@@_primitive:NN \useboxresource        \tex_pdfrefxform:D
+  \@@_primitive:NN \useimageresource      \tex_pdfrefximage:D
+  \@@_primitive:NN \savepos               \tex_savepos:D
+  \@@_primitive:NN \saveboxresource       \tex_pdfxform:D
+  \@@_primitive:NN \saveimageresource     \tex_pdfximage:D
+  \@@_primitive:NN \setrandomseed         \tex_setrandomseed:D
+  \@@_primitive:NN \tracingfonts          \tex_tracingfonts:D
+  \@@_primitive:NN \uniformdeviate        \tex_uniformdeviate:D
+%    \end{macrocode}
+% Unicode数学原语集是由\XeTeX{}和\LuaTeX{}以一种相对复杂的方式引入的：
+% 最初几个原语以|\XeTeX...|的形式命名，而更多的则是在\LuaTeX{}中被重命名。
+% 这些名称现在都以|\U...|开头，主要以|\Umath...|开头。
+%    \begin{macrocode}
+  \@@_primitive:NN \Uchar                 \tex_Uchar:D
+  \@@_primitive:NN \Ucharcat              \tex_Ucharcat:D
+  \@@_primitive:NN \Udelcode              \tex_Udelcode:D
+  \@@_primitive:NN \Udelcodenum           \tex_Udelcodenum:D
+  \@@_primitive:NN \Udelimiter            \tex_Udelimiter:D
+  \@@_primitive:NN \Udelimiterover        \tex_Udelimiterover:D
+  \@@_primitive:NN \Udelimiterunder       \tex_Udelimiterunder:D
+  \@@_primitive:NN \Uhextensible          \tex_Uhextensible:D
+  \@@_primitive:NN \Uleft                 \tex_Uleft:D
+  \@@_primitive:NN \Umathaccent           \tex_Umathaccent:D
+  \@@_primitive:NN \Umathaxis             \tex_Umathaxis:D
+  \@@_primitive:NN \Umathbinbinspacing    \tex_Umathbinbinspacing:D
+  \@@_primitive:NN \Umathbinclosespacing  \tex_Umathbinclosespacing:D
+  \@@_primitive:NN \Umathbininnerspacing  \tex_Umathbininnerspacing:D
+  \@@_primitive:NN \Umathbinopenspacing   \tex_Umathbinopenspacing:D
+  \@@_primitive:NN \Umathbinopspacing     \tex_Umathbinopspacing:D
+  \@@_primitive:NN \Umathbinordspacing    \tex_Umathbinordspacing:D
+  \@@_primitive:NN \Umathbinpunctspacing  \tex_Umathbinpunctspacing:D
+  \@@_primitive:NN \Umathbinrelspacing    \tex_Umathbinrelspacing:D
+  \@@_primitive:NN \Umathchar             \tex_Umathchar:D
+  \@@_primitive:NN \Umathcharclass        \tex_Umathcharclass:D
+  \@@_primitive:NN \Umathchardef          \tex_Umathchardef:D
+  \@@_primitive:NN \Umathcharfam          \tex_Umathcharfam:D
+  \@@_primitive:NN \Umathcharnum          \tex_Umathcharnum:D
+  \@@_primitive:NN \Umathcharnumdef       \tex_Umathcharnumdef:D
+  \@@_primitive:NN \Umathcharslot         \tex_Umathcharslot:D
+  \@@_primitive:NN \Umathclosebinspacing  \tex_Umathclosebinspacing:D
+  \@@_primitive:NN \Umathcloseclosespacing
+    \tex_Umathcloseclosespacing:D
+  \@@_primitive:NN \Umathcloseinnerspacing
+    \tex_Umathcloseinnerspacing:D
+  \@@_primitive:NN \Umathcloseopenspacing \tex_Umathcloseopenspacing:D
+  \@@_primitive:NN \Umathcloseopspacing   \tex_Umathcloseopspacing:D
+  \@@_primitive:NN \Umathcloseordspacing  \tex_Umathcloseordspacing:D
+  \@@_primitive:NN \Umathclosepunctspacing
+    \tex_Umathclosepunctspacing:D
+  \@@_primitive:NN \Umathcloserelspacing  \tex_Umathcloserelspacing:D
+  \@@_primitive:NN \Umathcode             \tex_Umathcode:D
+  \@@_primitive:NN \Umathcodenum          \tex_Umathcodenum:D
+  \@@_primitive:NN \Umathconnectoroverlapmin
+    \tex_Umathconnectoroverlapmin:D
+  \@@_primitive:NN \Umathfractiondelsize  \tex_Umathfractiondelsize:D
+  \@@_primitive:NN \Umathfractiondenomdown
+    \tex_Umathfractiondenomdown:D
+  \@@_primitive:NN \Umathfractiondenomvgap
+    \tex_Umathfractiondenomvgap:D
+  \@@_primitive:NN \Umathfractionnumup    \tex_Umathfractionnumup:D
+  \@@_primitive:NN \Umathfractionnumvgap  \tex_Umathfractionnumvgap:D
+  \@@_primitive:NN \Umathfractionrule     \tex_Umathfractionrule:D
+  \@@_primitive:NN \Umathinnerbinspacing  \tex_Umathinnerbinspacing:D
+  \@@_primitive:NN \Umathinnerclosespacing
+    \tex_Umathinnerclosespacing:D
+  \@@_primitive:NN \Umathinnerinnerspacing
+    \tex_Umathinnerinnerspacing:D
+  \@@_primitive:NN \Umathinneropenspacing \tex_Umathinneropenspacing:D
+  \@@_primitive:NN \Umathinneropspacing   \tex_Umathinneropspacing:D
+  \@@_primitive:NN \Umathinnerordspacing  \tex_Umathinnerordspacing:D
+  \@@_primitive:NN \Umathinnerpunctspacing
+    \tex_Umathinnerpunctspacing:D
+  \@@_primitive:NN \Umathinnerrelspacing  \tex_Umathinnerrelspacing:D
+  \@@_primitive:NN \Umathlimitabovebgap   \tex_Umathlimitabovebgap:D
+  \@@_primitive:NN \Umathlimitabovekern   \tex_Umathlimitabovekern:D
+  \@@_primitive:NN \Umathlimitabovevgap   \tex_Umathlimitabovevgap:D
+  \@@_primitive:NN \Umathlimitbelowbgap   \tex_Umathlimitbelowbgap:D
+  \@@_primitive:NN \Umathlimitbelowkern   \tex_Umathlimitbelowkern:D
+  \@@_primitive:NN \Umathlimitbelowvgap   \tex_Umathlimitbelowvgap:D
+  \@@_primitive:NN \Umathnolimitsubfactor \tex_Umathnolimitsubfactor:D
+  \@@_primitive:NN \Umathnolimitsupfactor \tex_Umathnolimitsupfactor:D
+  \@@_primitive:NN \Umathopbinspacing     \tex_Umathopbinspacing:D
+  \@@_primitive:NN \Umathopclosespacing   \tex_Umathopclosespacing:D
+  \@@_primitive:NN \Umathopenbinspacing   \tex_Umathopenbinspacing:D
+  \@@_primitive:NN \Umathopenclosespacing \tex_Umathopenclosespacing:D
+  \@@_primitive:NN \Umathopeninnerspacing \tex_Umathopeninnerspacing:D
+  \@@_primitive:NN \Umathopenopenspacing  \tex_Umathopenopenspacing:D
+  \@@_primitive:NN \Umathopenopspacing    \tex_Umathopenopspacing:D
+  \@@_primitive:NN \Umathopenordspacing   \tex_Umathopenordspacing:D
+  \@@_primitive:NN \Umathopenpunctspacing \tex_Umathopenpunctspacing:D
+  \@@_primitive:NN \Umathopenrelspacing   \tex_Umathopenrelspacing:D
+  \@@_primitive:NN \Umathoperatorsize     \tex_Umathoperatorsize:D
+  \@@_primitive:NN \Umathopinnerspacing   \tex_Umathopinnerspacing:D
+  \@@_primitive:NN \Umathopopenspacing    \tex_Umathopopenspacing:D
+  \@@_primitive:NN \Umathopopspacing      \tex_Umathopopspacing:D
+  \@@_primitive:NN \Umathopordspacing     \tex_Umathopordspacing:D
+  \@@_primitive:NN \Umathoppunctspacing   \tex_Umathoppunctspacing:D
+  \@@_primitive:NN \Umathoprelspacing     \tex_Umathoprelspacing:D
+  \@@_primitive:NN \Umathordbinspacing    \tex_Umathordbinspacing:D
+  \@@_primitive:NN \Umathordclosespacing  \tex_Umathordclosespacing:D
+  \@@_primitive:NN \Umathordinnerspacing  \tex_Umathordinnerspacing:D
+  \@@_primitive:NN \Umathordopenspacing   \tex_Umathordopenspacing:D
+  \@@_primitive:NN \Umathordopspacing     \tex_Umathordopspacing:D
+  \@@_primitive:NN \Umathordordspacing    \tex_Umathordordspacing:D
+  \@@_primitive:NN \Umathordpunctspacing  \tex_Umathordpunctspacing:D
+  \@@_primitive:NN \Umathordrelspacing    \tex_Umathordrelspacing:D
+  \@@_primitive:NN \Umathoverbarkern      \tex_Umathoverbarkern:D
+  \@@_primitive:NN \Umathoverbarrule      \tex_Umathoverbarrule:D
+  \@@_primitive:NN \Umathoverbarvgap      \tex_Umathoverbarvgap:D
+  \@@_primitive:NN \Umathoverdelimiterbgap
+     \tex_Umathoverdelimiterbgap:D
+  \@@_primitive:NN \Umathoverdelimitervgap
+    \tex_Umathoverdelimitervgap:D
+  \@@_primitive:NN \Umathpunctbinspacing  \tex_Umathpunctbinspacing:D
+  \@@_primitive:NN \Umathpunctclosespacing
+    \tex_Umathpunctclosespacing:D
+  \@@_primitive:NN \Umathpunctinnerspacing
+    \tex_Umathpunctinnerspacing:D
+  \@@_primitive:NN \Umathpunctopenspacing \tex_Umathpunctopenspacing:D
+  \@@_primitive:NN \Umathpunctopspacing   \tex_Umathpunctopspacing:D
+  \@@_primitive:NN \Umathpunctordspacing  \tex_Umathpunctordspacing:D
+  \@@_primitive:NN \Umathpunctpunctspacing
+    \tex_Umathpunctpunctspacing:D
+  \@@_primitive:NN \Umathpunctrelspacing  \tex_Umathpunctrelspacing:D
+  \@@_primitive:NN \Umathquad             \tex_Umathquad:D
+  \@@_primitive:NN \Umathradicaldegreeafter
+    \tex_Umathradicaldegreeafter:D
+  \@@_primitive:NN \Umathradicaldegreebefore
+    \tex_Umathradicaldegreebefore:D
+  \@@_primitive:NN \Umathradicaldegreeraise
+    \tex_Umathradicaldegreeraise:D
+  \@@_primitive:NN \Umathradicalkern      \tex_Umathradicalkern:D
+  \@@_primitive:NN \Umathradicalrule      \tex_Umathradicalrule:D
+  \@@_primitive:NN \Umathradicalvgap      \tex_Umathradicalvgap:D
+  \@@_primitive:NN \Umathrelbinspacing    \tex_Umathrelbinspacing:D
+  \@@_primitive:NN \Umathrelclosespacing  \tex_Umathrelclosespacing:D
+  \@@_primitive:NN \Umathrelinnerspacing  \tex_Umathrelinnerspacing:D
+  \@@_primitive:NN \Umathrelopenspacing   \tex_Umathrelopenspacing:D
+  \@@_primitive:NN \Umathrelopspacing     \tex_Umathrelopspacing:D
+  \@@_primitive:NN \Umathrelordspacing    \tex_Umathrelordspacing:D
+  \@@_primitive:NN \Umathrelpunctspacing  \tex_Umathrelpunctspacing:D
+  \@@_primitive:NN \Umathrelrelspacing    \tex_Umathrelrelspacing:D
+  \@@_primitive:NN \Umathskewedfractionhgap
+    \tex_Umathskewedfractionhgap:D
+  \@@_primitive:NN \Umathskewedfractionvgap
+    \tex_Umathskewedfractionvgap:D
+  \@@_primitive:NN \Umathspaceafterscript \tex_Umathspaceafterscript:D
+  \@@_primitive:NN \Umathstackdenomdown   \tex_Umathstackdenomdown:D
+  \@@_primitive:NN \Umathstacknumup       \tex_Umathstacknumup:D
+  \@@_primitive:NN \Umathstackvgap        \tex_Umathstackvgap:D
+  \@@_primitive:NN \Umathsubshiftdown     \tex_Umathsubshiftdown:D
+  \@@_primitive:NN \Umathsubshiftdrop     \tex_Umathsubshiftdrop:D
+  \@@_primitive:NN \Umathsubsupshiftdown  \tex_Umathsubsupshiftdown:D
+  \@@_primitive:NN \Umathsubsupvgap       \tex_Umathsubsupvgap:D
+  \@@_primitive:NN \Umathsubtopmax        \tex_Umathsubtopmax:D
+  \@@_primitive:NN \Umathsupbottommin     \tex_Umathsupbottommin:D
+  \@@_primitive:NN \Umathsupshiftdrop     \tex_Umathsupshiftdrop:D
+  \@@_primitive:NN \Umathsupshiftup       \tex_Umathsupshiftup:D
+  \@@_primitive:NN \Umathsupsubbottommax  \tex_Umathsupsubbottommax:D
+  \@@_primitive:NN \Umathunderbarkern     \tex_Umathunderbarkern:D
+  \@@_primitive:NN \Umathunderbarrule     \tex_Umathunderbarrule:D
+  \@@_primitive:NN \Umathunderbarvgap     \tex_Umathunderbarvgap:D
+  \@@_primitive:NN \Umathunderdelimiterbgap
+    \tex_Umathunderdelimiterbgap:D
+  \@@_primitive:NN \Umathunderdelimitervgap
+    \tex_Umathunderdelimitervgap:D
+  \@@_primitive:NN \Umiddle               \tex_Umiddle:D
+  \@@_primitive:NN \Unosubscript          \tex_Unosubscript:D
+  \@@_primitive:NN \Unosuperscript        \tex_Unosuperscript:D
+  \@@_primitive:NN \Uoverdelimiter        \tex_Uoverdelimiter:D
+  \@@_primitive:NN \Uradical              \tex_Uradical:D
+  \@@_primitive:NN \Uright                \tex_Uright:D
+  \@@_primitive:NN \Uroot                 \tex_Uroot:D
+  \@@_primitive:NN \Uskewed               \tex_Uskewed:D
+  \@@_primitive:NN \Uskewedwithdelims     \tex_Uskewedwithdelims:D
+  \@@_primitive:NN \Ustack                \tex_Ustack:D
+  \@@_primitive:NN \Ustartdisplaymath     \tex_Ustartdisplaymath:D
+  \@@_primitive:NN \Ustartmath            \tex_Ustartmath:D
+  \@@_primitive:NN \Ustopdisplaymath      \tex_Ustopdisplaymath:D
+  \@@_primitive:NN \Ustopmath             \tex_Ustopmath:D
+  \@@_primitive:NN \Usubscript            \tex_Usubscript:D
+  \@@_primitive:NN \Usuperscript          \tex_Usuperscript:D
+  \@@_primitive:NN \Uunderdelimiter       \tex_Uunderdelimiter:D
+  \@@_primitive:NN \Uvextensible          \tex_Uvextensible:D
+%    \end{macrocode}
+% 来自\pTeX{}中的原语。
+%    \begin{macrocode}
+  \@@_primitive:NN \autospacing           \tex_autospacing:D
+  \@@_primitive:NN \autoxspacing          \tex_autoxspacing:D
+  \@@_primitive:NN \currentcjktoken       \tex_currentcjktoken:D
+  \@@_primitive:NN \currentspacingmode    \tex_currentspacingmode:D
+  \@@_primitive:NN \currentxspacingmode   \tex_currentxspacingmode:D
+  \@@_primitive:NN \disinhibitglue        \tex_disinhibitglue:D
+  \@@_primitive:NN \dtou                  \tex_dtou:D
+  \@@_primitive:NN \epTeXinputencoding    \tex_epTeXinputencoding:D
+  \@@_primitive:NN \epTeXversion          \tex_epTeXversion:D
+  \@@_primitive:NN \euc                   \tex_euc:D
+  \@@_primitive:NN \hfi                   \tex_hfi:D
+  \@@_primitive:NN \ifdbox                \tex_ifdbox:D
+  \@@_primitive:NN \ifddir                \tex_ifddir:D
+  \@@_primitive:NN \ifjfont               \tex_ifjfont:D
+  \@@_primitive:NN \ifmbox                \tex_ifmbox:D
+  \@@_primitive:NN \ifmdir                \tex_ifmdir:D
+  \@@_primitive:NN \iftbox                \tex_iftbox:D
+  \@@_primitive:NN \iftfont               \tex_iftfont:D
+  \@@_primitive:NN \iftdir                \tex_iftdir:D
+  \@@_primitive:NN \ifybox                \tex_ifybox:D
+  \@@_primitive:NN \ifydir                \tex_ifydir:D
+  \@@_primitive:NN \inhibitglue           \tex_inhibitglue:D
+  \@@_primitive:NN \inhibitxspcode        \tex_inhibitxspcode:D
+  \@@_primitive:NN \jcharwidowpenalty     \tex_jcharwidowpenalty:D
+  \@@_primitive:NN \jfam                  \tex_jfam:D
+  \@@_primitive:NN \jfont                 \tex_jfont:D
+  \@@_primitive:NN \jis                   \tex_jis:D
+  \@@_primitive:NN \kanjiskip             \tex_kanjiskip:D
+  \@@_primitive:NN \kansuji               \tex_kansuji:D
+  \@@_primitive:NN \kansujichar           \tex_kansujichar:D
+  \@@_primitive:NN \kcatcode              \tex_kcatcode:D
+  \@@_primitive:NN \kuten                 \tex_kuten:D
+  \@@_primitive:NN \lastnodechar          \tex_lastnodechar:D
+  \@@_primitive:NN \lastnodefont          \tex_lastnodefont:D
+  \@@_primitive:NN \lastnodesubtype       \tex_lastnodesubtype:D
+  \@@_primitive:NN \noautospacing         \tex_noautospacing:D
+  \@@_primitive:NN \noautoxspacing        \tex_noautoxspacing:D
+  \@@_primitive:NN \pagefistretch         \tex_pagefistretch:D
+  \@@_primitive:NN \postbreakpenalty      \tex_postbreakpenalty:D
+  \@@_primitive:NN \prebreakpenalty       \tex_prebreakpenalty:D
+  \@@_primitive:NN \ptexfontname          \tex_ptexfontname:D
+  \@@_primitive:NN \ptexlineendmode       \tex_lineendmode:D
+  \@@_primitive:NN \ptexminorversion      \tex_ptexminorversion:D
+  \@@_primitive:NN \ptexrevision          \tex_ptexrevision:D
+  \@@_primitive:NN \ptextracingfonts      \tex_ptextracingfonts:D
+  \@@_primitive:NN \ptexversion           \tex_ptexversion:D
+  \@@_primitive:NN \readpapersizespecial  \tex_readpapersizespecial:D
+  \@@_primitive:NN \scriptbaselineshiftfactor
+    \tex_scriptbaselineshiftfactor:D
+  \@@_primitive:NN \scriptscriptbaselineshiftfactor
+    \tex_scriptscriptbaselineshiftfactor:D
+  \@@_primitive:NN \showmode              \tex_showmode:D
+  \@@_primitive:NN \sjis                  \tex_sjis:D
+  \@@_primitive:NN \tate                  \tex_tate:D
+  \@@_primitive:NN \tbaselineshift        \tex_tbaselineshift:D
+  \@@_primitive:NN \textbaselineshiftfactor
+    \tex_textbaselineshiftfactor:D
+  \@@_primitive:NN \tfont                 \tex_tfont:D
+  \@@_primitive:NN \tojis                 \tex_tojis:D
+  \@@_primitive:NN \toucs                 \tex_toucs:D
+  \@@_primitive:NN \ucs                   \tex_ucs:D
+  \@@_primitive:NN \xkanjiskip            \tex_xkanjiskip:D
+  \@@_primitive:NN \xspcode               \tex_xspcode:D
+  \@@_primitive:NN \ybaselineshift        \tex_ybaselineshift:D
+  \@@_primitive:NN \yoko                  \tex_yoko:D
+  \@@_primitive:NN \vfi                   \tex_vfi:D
+%    \end{macrocode}
+% 来自\upTeX{}中的原语。
+%    \begin{macrocode}
+  \@@_primitive:NN \currentcjktoken       \tex_currentcjktoken:D
+  \@@_primitive:NN \disablecjktoken       \tex_disablecjktoken:D
+  \@@_primitive:NN \enablecjktoken        \tex_enablecjktoken:D
+  \@@_primitive:NN \forcecjktoken         \tex_forcecjktoken:D
+  \@@_primitive:NN \kchar                 \tex_kchar:D
+  \@@_primitive:NN \kchardef              \tex_kchardef:D
+  \@@_primitive:NN \kuten                 \tex_kuten:D
+  \@@_primitive:NN \uptexrevision         \tex_uptexrevision:D
+  \@@_primitive:NN \uptexversion          \tex_uptexversion:D
+%    \end{macrocode}
+% \pTeX{}提供的omega原语 （单独列出以便了解它们的来源）。
+%    \begin{macrocode}
+  \@@_primitive:NN \odelcode              \tex_odelcode:D
+  \@@_primitive:NN \odelimiter            \tex_odelimiter:D
+  \@@_primitive:NN \omathaccent           \tex_omathaccent:D
+  \@@_primitive:NN \omathchar             \tex_omathchar:D
+  \@@_primitive:NN \omathchardef          \tex_omathchardef:D
+  \@@_primitive:NN \omathcode             \tex_omathcode:D
+  \@@_primitive:NN \oradical              \tex_oradical:D
+%    \end{macrocode}
+% 较新的跨引擎原语。
+%    \begin{macrocode}
+  \@@_primitive:NN \partokencontext       \tex_partokencontext:D
+  \@@_primitive:NN \partokenname          \tex_partokenname:D
+  \@@_primitive:NN \showstream            \tex_showstream:D
+  \@@_primitive:NN \tracingstacklevels    \tex_tracingstacklevels:D
+%    \end{macrocode}
+% 源码中\enquote{names}标记部分结束。
+%    \begin{macrocode}
+%</names|package>
+%</names|tex>
+%<*package>
+%<*tex>
+%    \end{macrocode}
+% 
+% 重命名完成，关闭分组。
+%    \begin{macrocode}
+\tex_endgroup:D
+%    \end{macrocode}
+%
+% \LaTeXe{} 变动了一些原语，因此这些被整理了出来。在较新版本的 \LaTeXe{}中，
+% \pkg{expl3}会较早地加载，故只有一些原语已经被重命名，因而此处我们需要进行两次测试。
+% 在\LaTeXe{}格式的开头，\tn{end}和\tn{input}这两个原语被重命名，而其他的原语则稍后才被重命名。
+%    \begin{macrocode}
+\tex_ifdefined:D \@@@@end
+  \tex_let:D \tex_end:D                  \@@@@end
+  \tex_let:D \tex_input:D                \@@@@input
+\tex_fi:D
+%    \end{macrocode}
+%
+% 如果定义了\tn{@@hyph}，那么将在2020/10/01之前的\LaTeXe{}版本中加载
+% \pkg{expl3}，因此还必须测试其他一些原语。
+%    \begin{macrocode}
+\tex_ifdefined:D \@@@@hyph
+  \tex_let:D \tex_everydisplay:D         \frozen@everydisplay
+  \tex_let:D \tex_everymath:D            \frozen@everymath
+  \tex_let:D \tex_hyphen:D               \@@@@hyph
+  \tex_let:D \tex_italiccorrection:D     \@@@@italiccorr
+  \tex_let:D \tex_underline:D            \@@@@underline
+%    \end{macrocode}
+% The \tn{shipout} primitive is particularly tricky as a number of packages
+% want to hook in here. First, we see if a sufficiently-new kernel has saved
+% a copy: if it has, just use that. Otherwise, we need to check each of the
+% possible packages/classes that might move it: here, we are looking for those
+% which do \emph{not} delay action to the \tn{AtBeginDocument} hook. (We
+% cannot use \tn{primitive} as that doesn't
+% allow us to make a direct copy of the primitive \emph{itself}.) As we know
+% that \LaTeXe{} is in use, we use it's \tn{@tfor} loop here.
+%    \begin{macrocode}
+  \tex_ifdefined:D \@@@@shipout
+    \tex_let:D \tex_shipout:D \@@@@shipout
+  \tex_fi:D
+  \tex_begingroup:D
+    \tex_edef:D \l_tmpa_tl { \tex_string:D \shipout }
+    \tex_edef:D \l_tmpb_tl { \tex_meaning:D \shipout }
+    \tex_ifx:D \l_tmpa_tl \l_tmpb_tl
+    \tex_else:D
+      \tex_expandafter:D \@tfor \tex_expandafter:D \@tempa \tex_string:D :=
+        \CROP@shipout
+        \dup@shipout
+        \GPTorg@shipout
+        \LL@shipout
+        \mem@oldshipout
+        \opem@shipout
+        \pgfpages@originalshipout
+        \pr@shipout
+        \Shipout
+        \verso@orig@shipout
+        \do
+          {
+            \tex_edef:D \l_tmpb_tl
+              { \tex_expandafter:D \tex_meaning:D \@tempa }
+            \tex_ifx:D \l_tmpa_tl \l_tmpb_tl
+              \tex_global:D \tex_expandafter:D \tex_let:D
+                \tex_expandafter:D \tex_shipout:D \@tempa
+            \tex_fi:D
+          }
+    \tex_fi:D
+  \tex_endgroup:D
+%    \end{macrocode}
+%
+% 需要对\tn[index=tracingfonts]{(pdf)tracingfonts}进行一些整理。
+% 较新的\LuaTeX{}将其简单地命名为 \tn{tracingfonts}，但这被\LaTeXe{}内核
+% 覆盖了。因此，必须被删除任何错误的定义，然后从\pdfTeX{}或\LuaTeX{}名称中
+% 保存真正的版本。在后一种情况下，我们让 \tn{@@tracingfonts} 可用：这可能很有用，
+% 几乎所有的\LaTeXe{}用户都会通过\pkg{fontspec}加载\pkg{expl3}。
+% （我们遵循常规的内核约定，使用|@@|来保存原语。）
+%    \begin{macrocode}
+  \tex_let:D \tex_tracingfonts:D \tex_undefined:D
+  \tex_ifdefined:D \pdftracingfonts
+    \tex_let:D \tex_tracingfonts:D \pdftracingfonts
+  \tex_else:D
+    \tex_ifdefined:D \tex_directlua:D
+      \tex_directlua:D { tex.enableprimitives("@@@@", {"tracingfonts"}) }
+      \tex_let:D \tex_tracingfonts:D \@@@@tracingfonts
+    \tex_fi:D
+  \tex_fi:D
+\tex_fi:D
+%    \end{macrocode}
+%
+% 只有\pdfTeX{}和\LuaTeX{}定义了\tn{pdfmapfile}和\tn{pdfmapline}。
+% 整理一些在格式构建过程中可能存在的可疑决策！
+%    \begin{macrocode}
+\tex_ifnum:D 0
+  \tex_ifdefined:D \tex_pdftexversion:D 1 \tex_fi:D
+  \tex_ifdefined:D \tex_luatexversion:D 1 \tex_fi:D
+    = 0 %
+  \tex_let:D \tex_pdfmapfile:D \tex_undefined:D
+  \tex_let:D \tex_pdfmapline:D \tex_undefined:D
+\tex_fi:D
+%    \end{macrocode}
+% 一些宏包对与日期相关的原语做了不好的修改。
+%    \begin{macrocode}
+\tex_begingroup:D
+  \tex_edef:D \l_tmpa_tl { \tex_meaning:D \tex_time:D }
+  \tex_edef:D \l_tmpb_tl { \tex_string:D \time }
+  \tex_ifx:D \l_tmpa_tl \l_tmpb_tl
+  \tex_else:D
+    \tex_global:D \tex_let:D \tex_time:D \tex_undefined:D
+  \tex_fi:D
+  \tex_edef:D \l_tmpa_tl { \tex_meaning:D \tex_day:D }
+  \tex_edef:D \l_tmpb_tl { \tex_string:D \day }
+  \tex_ifx:D \l_tmpa_tl \l_tmpb_tl
+  \tex_else:D
+    \tex_global:D \tex_let:D \tex_day:D \tex_undefined:D
+  \tex_fi:D
+  \tex_edef:D \l_tmpa_tl { \tex_meaning:D \tex_month:D }
+  \tex_edef:D \l_tmpb_tl { \tex_string:D \month }
+  \tex_ifx:D \l_tmpa_tl \l_tmpb_tl
+  \tex_else:D
+    \tex_global:D \tex_let:D \tex_month:D \tex_undefined:D
+  \tex_fi:D
+  \tex_edef:D \l_tmpa_tl { \tex_meaning:D \tex_year:D }
+  \tex_edef:D \l_tmpb_tl { \tex_string:D \year }
+  \tex_ifx:D \l_tmpa_tl \l_tmpb_tl
+  \tex_else:D
+    \tex_global:D \tex_let:D \tex_year:D \tex_undefined:D
+  \tex_fi:D
+\tex_endgroup:D
+%    \end{macrocode}
+%
+% \pkg{cslatex}变动了一些原语，我们在这里进行恢复。
+% 由于没有其他标记，我们只能通过查找名称来进行处理。
+%    \begin{macrocode}
+\tex_ifdefined:D \orieveryjob
+  \tex_let:D \tex_everyjob:D \orieveryjob
+\tex_fi:D
+\tex_ifdefined:D \oripdfoutput
+  \tex_let:D \tex_pdfoutput:D \oripdfoutput
+\tex_fi:D
+%    \end{macrocode}
+%
+% 对于\ConTeXt{}，需要进行两个测试。无论是Mark~II还是Mark~IV，它们都变动了几个
+% 原语：这些都包含在第一个测试中，并再次使用\cs{end}作为标记。对于Mark~IV，
+% 也变动了几个原语：它们在当前的\ConTeXt{}中使用一些Lua代码实现。
+%    \begin{macrocode}
+\tex_ifdefined:D \normalend
+  \tex_let:D \tex_end:D         \normalend
+  \tex_let:D \tex_everyjob:D    \normaleveryjob
+  \tex_let:D \tex_input:D       \normalinput
+  \tex_let:D \tex_language:D    \normallanguage
+  \tex_let:D \tex_mathop:D      \normalmathop
+  \tex_let:D \tex_month:D       \normalmonth
+  \tex_let:D \tex_outer:D       \normalouter
+  \tex_let:D \tex_over:D        \normalover
+  \tex_let:D \tex_vcenter:D     \normalvcenter
+  \tex_let:D \tex_unexpanded:D  \normalunexpanded
+  \tex_let:D \tex_expanded:D    \normalexpanded
+\tex_fi:D
+\tex_ifdefined:D \normalitaliccorrection
+  \tex_let:D \tex_hoffset:D          \normalhoffset
+  \tex_let:D \tex_italiccorrection:D \normalitaliccorrection
+  \tex_let:D \tex_voffset:D          \normalvoffset
+  \tex_let:D \tex_showtokens:D       \normalshowtokens
+  \tex_let:D \tex_bodydir:D          \spac_directions_normal_body_dir
+  \tex_let:D \tex_pagedir:D          \spac_directions_normal_page_dir
+\tex_fi:D
+\tex_ifdefined:D \normalleft
+  \tex_let:D \tex_left:D   \normalleft
+  \tex_let:D \tex_middle:D \normalmiddle
+  \tex_let:D \tex_right:D  \normalright
+\tex_fi:D
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</tex>
+%    \end{macrocode}
+%
+% 在\LuaTeX{}中，我们还使用Lua代码来模拟一些原语。
+%    \begin{macrocode}
+%<*lua>
+%    \end{macrocode}
+%
+% \begin{macro}{\tex_strcmp:D}
+%   Compare two strings, expanding to |0| if they are equal,
+%   |-1| if the first one is smaller and |1| if the second one is smaller.
+%   Here \enquote{smaller} refers to codepoint order which does not correspond to
+%   the user expected order for most non-ASCII strings.
+%    \begin{macrocode}
+local minus_tok = token_new(string.byte'-', 12)
+local zero_tok = token_new(string.byte'0', 12)
+local one_tok = token_new(string.byte'1', 12)
+luacmd('tex_strcmp:D', function()
+  local first = scan_string()
+  local second = scan_string()
+  if first < second then
+    put_next(minus_tok, one_tok)
+  else
+    put_next(first == second and zero_tok or one_tok)
+  end
+end, 'global')
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\tex_Ucharcat:D}
+%   Creating arbitrary chars using |tex.cprint|.
+%   The alternative approach using |token.new(...)| is about 10\% slower
+%   but needed to create arbitrary space tokens.
+%    \begin{macrocode}
+local sprint = tex.sprint
+local cprint = tex.cprint
+luacmd('tex_Ucharcat:D', function()
+  local charcode = scan_int()
+  local catcode = scan_int()
+  if catcode == 10 then
+    sprint(token_new(charcode, 10))
+  else
+    cprint(catcode, utf8_char(charcode))
+  end
+end, 'global')
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\tex_filesize:D}
+%   Wrap the function from |ltxutils|.
+%    \begin{macrocode}
+luacmd('tex_filesize:D', function()
+  local size = filesize(scan_string())
+  if size then write(size) end
+end, 'global')
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\tex_mdfivesum:D}
+%   There are two cases: Either hash a file or a string.
+%   Both are already implemented in l3luatex or built-in.
+%    \begin{macrocode}
+luacmd('tex_mdfivesum:D', function()
+  local hash
+  if scan_keyword"file" then
+    hash = filemd5sum(scan_string())
+  else
+    hash = md5_HEX(scan_string())
+  end
+  if hash then write(hash) end
+end, 'global')
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\tex_filemoddate:D}
+%  获取文件修改日期的原语。
+%    \begin{macrocode}
+luacmd('tex_filemoddate:D', function()
+  local date = filemoddate(scan_string())
+  if date then write(date) end
+end, 'global')
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\tex_filedump:D}
+%   An emulated primitive for getting a hexdump from a (partial) file.
+%   The length has a default of |0|. This is consistent with
+%   \pdfTeX, but it effectivly makes the primitive useless without an
+%   explicit |length|. Therefore we allow the keyword |whole| to be used
+%   instead of a length, indicating that the whole remaining file should
+%   be read.
+%    \begin{macrocode}
+luacmd('tex_filedump:D', function()
+  local offset = scan_keyword'offset' and scan_int() or nil
+  local length = scan_keyword'length' and scan_int()
+          or not scan_keyword'whole' and 0 or nil
+  local data = filedump(scan_string(), offset, length)
+  if data then write(data) end
+end, 'global')
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+%</lua>
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex

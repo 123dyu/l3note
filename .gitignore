@@ -1,0 +1,29 @@
+# Auxiliary files
+*.aux
+*.cpt
+*.glo
+*.hd
+*.idx
+*.ilg
+*.ind
+*.listing
+*.log
+*.out
+*.synctex.gz
+*.synctex(busy)
+*.toc
+*.tmp
+
+# Generated files (plain text)
+*.ins
+*.sty
+
+# Generated files (binary)
+*.dvi
+*.pdf
+
+# Other
+ctxdoc.cls
+!TDS/**/*.pdf
+!TDS/**/*.ins
+!TDS/**/*.sty

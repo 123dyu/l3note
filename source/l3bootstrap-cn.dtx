@@ -1,0 +1,455 @@
+% \iffalse meta-comment
+%
+%% File: l3bootstrap-cn.dtx
+%
+% Copyright (C) 2023 by Yu Du <3531243657@qq.com>
+% 
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either
+% version 1.3c of this license or (at your option) any later
+% version. The latest version of this license is in:
+% 
+%   http://www.latex-project.org/lppl.txt
+% 
+% and version 1.3 or later is part of all distributions of
+% LaTeX version 2005/12/01 or later. 
+%
+%<*driver>
+\documentclass[full,kernel]{l3doc}
+\usepackage{ctex}
+\input{../set/codeset.tex}
+\ExplSyntaxOn
+\legacy_if_set_true:n{bootstrap}
+\ExplSyntaxOff
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \title{^^A
+%    \pkg{l3bootstrap}宏包——\textbf{导引代码（Bootstrap code）}^^A
+% }
+%
+% \author{^^A
+%  \LaTeX{}项目组【著】\thanks
+%    {^^A
+%      E-mail:
+%        \href{mailto:latex-team@latex-project.org}
+%          {latex-team@latex-project.org}^^A
+%    }\\
+%  dyu【译】\thanks{E-mail: 3531243657@qq.com}
+% }
+%
+% \date{分发于2023-11-09}
+%
+% \ifbootstrap
+% \maketitle
+% \fi
+%
+% \begin{documentation}
+% 
+%
+% \ifbootstrap
+% \section{使用\LaTeX3模块}
+%
+% \LaTeX3模块被设计在\LaTeXe{}上使用，该模块自\LaTeXe{} 2020-02-02以来已经预
+% 加载，而对于较旧的格式，仍可使用|\usepackage{expl3}|或|\RequirePackage{expl3}| 
+% 来将其整体载入。
+%
+% \LaTeX3有一套不同于标准\LaTeXe{}的编程语法，下述函数用于构建\LaTeX3编程环境。
+% \fi
+%
+% \begin{function}[updated = 2011-08-13]{\ExplSyntaxOn, \ExplSyntaxOff}
+%   \begin{syntax}
+%     \cs{ExplSyntaxOn} \meta{\LaTeX3代码} \cs{ExplSyntaxOff}
+%   \end{syntax}
+%   |\ExplSyntaxOn|和|\ExplSyntaxOff|分别用来开启和关闭\LaTeX3编程环境。比如在
+%   \file{.tex}文件中，可以这样使用它们：
+%   \begin{latexsyntax}[gobble=6]
+%     \documentclass{<文类文件基本名>}
+%     % 如今(自2020-02-02之后)可以不用载入expl3宏包就能使用(*\LaTeX3*)语法了
+%     \begin{document}
+%     % 显示在PDF文件中的内容
+%     \ExplSyntaxOn % 开启(*\LaTeX3*)编程环境
+%     ... 
+%     \ExplSyntaxOff % 关闭(*\LaTeX3*)编程环境
+%     \end{document}
+%   \end{latexsyntax}
+% \end{function}
+% 
+% \begin{function}[updated = 2017-03-19, updated = 2023-08-03]
+%   {\ProvidesExplPackage, \ProvidesExplClass, \ProvidesExplFile}
+%   \begin{syntax}
+%     \cs{RequirePackage}|{expl3}|
+%     \cs{ProvidesExplPackage} \Arg{宏包文件基本名} \Arg{发行日期} \Arg{版本号} \Arg{描述}
+%     \cs{ProvidesExplClass} \Arg{文类文件基本名} \Arg{发行日期} \Arg{版本号} \Arg{描述}
+%     \cs{ProvidesExplFile} \Arg{其他文件基本名} \Arg{发行日期} \Arg{版本号} \Arg{描述}
+%   \end{syntax}
+%   用于标识当前文件是一个宏包/文档类/其他文件（也就是除文档类/宏包之外的任何文件，
+%   通常使用\tn{input}命令来载入它们），同时提供该文件的相关（发行）信息（包括：
+%   文件名、发行日期、版本号和文件描述）。
+% \end{function}
+% 
+% 如果要编写宏包或文档类，按照如下方式（与\LaTeXe{}的宏包和文档类编写规范类似
+% \footnote{具体可参看：\href{https://github.com/CTeX-org/ctex-doc/tree/master/clsguide-zh-cn}{《写给\LaTeXe{}类与宏包的作者（中译版）》}}）来操作方可进入\LaTeX3编程环境：
+%
+% \begin{latexsyntax}[gobble=4]
+%   \ProvidesExplPackage {<宏包名>} {<发行日期>} {<版本号>} {<描述>}
+%   % 文档类则使用(*\cs{ProvidesExplClass}*)
+%   % 其他文件（文档类/宏包之外的任何文件）则使用(*\cs{ProvidesExplFile}*)
+%   % 之后开启(*\LaTeX3*)编程环境（注意此后@也被视为字母），文末自动关闭（下划线_的类别码恢复为8，冒号:和@的类别码恢复为12）
+% \end{latexsyntax}
+% 其中，\meta{发行日期}的格式应为：\meta{年}/\meta{月}/\meta{日} 或ISO日期格式：\meta{年}-\meta{月}-\meta{日}。
+% 对于\meta{版本号}的格式而言，在书写时以小写字母“v”作为前缀的版本标识符是可选的（可有可无），如果给出的\meta{版本号}是不以v开头的“纯”字符串，那么系统会自动在其前加一个v，比如：
+% \begin{latexexample}[gobble=4]
+%   % 下面两行代码：
+%   \ProvidesExplPackage{test}{1.0.0}{2023-08-03}{Description}
+%   \ProvidesExplPackage{test}{v1.0.0}{2023-08-03}{Description}
+%   % 各自在编译时都会在屏幕和.log 文件输出类似下面这样的信息：
+%   Package: test 2023-08-03 v1.0.0 Description
+%   % 即前导符“v”是可选的
+% \end{latexexample}
+% 
+% 如果不想在上述命令中直接书写文件（宏包/文档类/其他文件）的相关（发行）信息（包括：文件名、版本号、发行日期和文件描述），那么可以使用如下命令来提取这些信息：
+% 
+% \begin{function}[updated = 2012-06-04]{\GetIdInfo}
+%   \begin{syntax}
+%     \cs{GetIdInfo} |$Id:| \meta{SVN字段信息} |$| \Arg{描述}
+%     \meta{SVN字段信息}的格式为：\meta{文件基本名}.\meta{文件扩展名} \meta{版本号} \meta{发行日期} \meta{其他信息}
+%     \meta{版本号}格式：不加前导符v
+%     \meta{发行日期}格式为：\meta{年}-\meta{月}-\meta{日}
+%   \end{syntax}
+%   用于提取文件（宏包/文档类/其他文件）的相关（发行）信息，注意在|$...$|之间的空格不会被忽略。
+%   当按规定形式（|$Id:| \meta{文件基本名}.\meta{文件扩展名} \meta{版本号} \meta{年}-\meta{月}-\meta{日} \meta{其他信息} |$| \Arg{描述}）填写完文件的相关（发行）信息后，这些信息就会被存储在以下命令中：
+% \end{function}
+% \begin{description}
+%   \item[\cs{ExplFileName}：] 文件基本名
+%   \item[\cs{ExplFileExtension}：] 文件扩展名
+%   \item[\cs{ExplFileDate}：] 发行日期
+%   \item[\cs{ExplFileVersion}：] 版本号 
+%   \item[\cs{ExplFileDescription}：] 文件描述
+% \end{description}
+% 之后便可在\cs[no-index]{ProvidesExpl...}系列命令中用上述文件信息命令来代替原本需要直接书写的信息，比如：
+% \begin{latexexample}[gobble=4]
+%   \ProvidesExplPackage{\ExplFileName}
+%     {\ExplFileDate}{\ExplFileVersion}{\ExplFileDescription}
+% \end{latexexample}
+% 
+% 这一函数的定义如下：
+% 
+% \begin{latexsyntax}[rulecolor=\color{yellow},gobble=4]
+%   \cs_new_protected:Npn \GetIdInfo
+%     {
+%       \tl_clear_new:N \ExplFileDescription
+%       \tl_clear_new:N \ExplFileDate
+%       \tl_clear_new:N \ExplFileName
+%       \tl_clear_new:N \ExplFileExtension
+%       \tl_clear_new:N \ExplFileVersion
+%       \group_begin:
+%       \char_set_catcode_space:n { 32 }
+%       \exp_after:wN
+%       \group_end:
+%       \__file_id_info_auxi:w
+%     }
+%   \cs_new_protected:Npn \__file_id_info_auxi:w $ #1 $ #2
+%     {
+%       \tl_set:Nn \ExplFileDescription {#2}
+%       \str_if_eq:nnTF {#1} { Id }
+%         {
+%           \tl_set:Nn \ExplFileDate { 0000/00/00 }
+%           \tl_set:Nn \ExplFileName { [unknown] }
+%           \tl_set:Nn \ExplFileExtension { [unknown~extension] }
+%           \tl_set:Nn \ExplFileVersion {-1}
+%         }
+%         { \__file_id_info_auxii:w #1 ~ \s__file_stop }
+%     }
+%   \cs_new_protected:Npn \__file_id_info_auxii:w
+%       #1 ~ #2.#3 ~ #4 ~ #5 ~ #6 \s__file_stop
+%     {
+%       \tl_set:Nn \ExplFileName {#2}
+%       \tl_set:Nn \ExplFileExtension {#3}
+%       \tl_set:Nn \ExplFileVersion {#4}
+%       \str_if_eq:nnTF {#4} {-1}
+%         { \tl_set:Nn \ExplFileDate { 0000/00/00 } }
+%         { \__file_id_info_auxiii:w #5 - 0 - 0 - \s__file_stop }
+%     }
+%   \cs_new_protected:Npn \__file_id_info_auxiii:w #1 - #2 - #3 - #4 \s__file_stop
+%     { \tl_set:Nn \ExplFileDate { #1/#2/#3 } }
+% \end{latexsyntax}
+% 从上述定义中可以看出：
+% 
+% \begin{enumerate}
+%   \item 在|$...$|中，以空格来分隔参数，比如“|ab|”表示一个参数，而“\verb*|a b|”则表示两个参数。另外，在\meta{SVN字段信息}中，\meta{文件基本名}、\meta{文件扩展名} 、\meta{版本号}和\meta{发行日期}必须按规定格式正确填写，它们会关系到\cs{ExplFileName}、\cs{ExplFileExtension}、\cs{ExplFileVersion}、\cs{ExplFileDate} 这几个命令的取值；而\meta{其他信息}则可随意填写，比如可以是作者信息（作者的姓名、邮箱等）。举例说明如下：
+%   \begin{latexexample}[gobble=6]
+%     % 使用如下代码：
+%     \GetIdInfo $Id: test.dtx 1.0.0 2023-09-03 11:00:00Z latexstudio <latexstudio@qq.com> $ {XXX Theme for the Beamer class}
+%     % 查看文件信息命令：
+%     \par \ExplFileName 
+%     \par \ExplFileExtension
+%     \par \ExplFileVersion
+%     \par \ExplFileDate 
+%     \par \ExplFileDescription
+%     % 将会得到：
+%     test
+%     dtx
+%     1.0.0
+%     2023/09/03
+%     XXX Theme for the Beamer class
+%     % (*\kaishu 注意：该例中\meta{其他信息}所包含的内容（也就是在\meta{发行日期}之后和 \verb|$| 之前的所有内容）为：|11:00:00Z latexstudio <latexstudio@qq.com> |，不要将 |11:00:00Z|（即\meta{时}:\meta{分}:\meta{秒}Z）误以为是\meta{发行时间}所包含的内容。*)
+%   \end{latexexample}
+% 
+%   \item 如果|$...$|之间只出现“Id”（不包括其后的冒号“:”），即|$Id$|，那么文件信息命令的值将分别为：
+%   \begin{itemize}
+%     \item \cs{ExplFileName}: { [unknown] }
+%     \item \cs{ExplFileExtension}: { [unknown~extension] }
+%     \item \cs{ExplFileVersion}: {-1}
+%     \item \cs{ExplFileDate}: { 0000/00/00 }
+%   \end{itemize}
+%   比如：
+%   \begin{latexexample}[gobble=6]
+%     \GetIdInfo $Id$ { }
+%     % 查看文件信息命令：
+%     \par \ExplFileName 
+%     \par \ExplFileExtension
+%     \par \ExplFileVersion
+%     \par \ExplFileDate 
+%     \par \ExplFileDescription
+%     % 将会得到：
+%     [unknown]
+%     [unknown extension]
+%     -1
+%     0000/00/00
+%   \end{latexexample}
+% 
+%   \item 如果文件的版本号为：$-1$，那么\cs{ExplFileDate}的值将为：0000/00/00 ，比如：
+%   \begin{latexexample}[gobble=6]
+%     \GetIdInfo $Id: test.dtx -1 2023-09-03 11:00:00 latexstudio <latexstudio@qq.com> $ {XXX Theme for the Beamer class}
+%     % 查看文件信息命令：
+%     \par \ExplFileName 
+%     \par \ExplFileExtension
+%     \par \ExplFileVersion
+%     \par \ExplFileDate 
+%     \par \ExplFileDescription
+%     % 将会得到：
+%     test
+%     dtx
+%     -1
+%     0000/00/00
+%     XXX Theme for the Beamer class
+%   \end{latexexample}
+% \end{enumerate}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{\pkg{l3bootstrap}实现原理}
+%
+%    \begin{macrocode}
+%<*package>
+%<@@=kernel>
+%    \end{macrocode}
+%
+% \subsection{\XeTeX{}中的\tn{pdfstrcmp}原语}
+% 
+% 只有\pdfTeX{}中有一个叫\tn{pdfstrcmp}的原语，在\XeTeX{}中仅有\tn{strcmp}，
+% 因此需要进行一些调整：
+%    \begin{macrocode}
+\begingroup\expandafter\expandafter\expandafter\endgroup
+  \expandafter\ifx\csname pdfstrcmp\endcsname\relax
+  \let\pdfstrcmp\strcmp
+\fi
+%    \end{macrocode}
+%
+% \subsection{\Lua{}代码的加载支持}
+%
+% 当使用\LuaTeX{}时，需要加载各种\Lua{}代码，代码本身在\pkg{l3luatex}中定义，
+% 并被提取到一个单独的文件中，下述操作则是用于在此时及每次开始作业时加载\Lua{}代码。
+%    \begin{macrocode}
+\begingroup\expandafter\expandafter\expandafter\endgroup
+\expandafter\ifx\csname directlua\endcsname\relax
+\else
+  \ifnum\luatexversion<110 %
+  \else
+%    \end{macrocode}
+% 确保加载了对\LuaTeX{}的基本支持（这仅在plain中是必须的）。
+%    \begin{macrocode}
+    \begingroup\expandafter\expandafter\expandafter\endgroup
+    \expandafter\ifx\csname newcatcodetable\endcsname\relax
+      \input{ltluatex}%
+    \fi
+    \begingroup\expandafter\expandafter\expandafter\endgroup
+    \expandafter\ifx\csname newluabytecode\endcsname\relax
+    \else
+      \newluabytecode\@expl@luadata@bytecode
+    \fi
+    \directlua{require("expl3")}%
+%    \end{macrocode}
+% 由于用户可能会创建自定义格式，故不假定只加载\Lua{}代码一次就可以匹配包模式。
+% 相反，通过查询\Lua{}可以确定当前正在运行的模式。
+%    \begin{macrocode}
+    \ifnum 0%
+      \directlua{
+        if status.ini_version then
+          tex.write("1")
+        end
+      }>0 %
+      \everyjob\expandafter{%
+        \the\expandafter\everyjob
+        \csname\detokenize{lua_now:n}\endcsname{require("expl3")}%
+      }%
+    \fi
+  \fi
+\fi
+%    \end{macrocode}
+%
+% \subsection{引擎要求}
+%
+% 代码目前需要\eTeX{}，包括\tn{expanded}在内的“\pdfTeX{}扩展”集，以及Unicode
+% 引擎通过展开生成任意字符记号的能力。自\TeX{} Live 2019以来，所有支持的引擎都具备
+% 这些功能，因此将其作为引擎和\LaTeX{}格式支持的基准。对于\LuaTeX，需要至少
+% \LuaTeX{} 5.3和有|token.set_lua|函数，这至少从\LuaTeX{} 1.10开始可用，后者也是
+% \TeX{} Live 2019中的版本。(u)p\TeX{} 在\TeX{} Live 2020中才有\tn{ifincsname}
+% 原语，但目前该原语在\pkg{expl3}中未使用，因此当前没有对其进行测试。
+% 如果以后发生变化，则需重新审视这里的代码。
+%    \begin{macrocode}
+\begingroup
+  \def\next{\endgroup}%
+  \def\ShortText{Required primitives not found}%
+  \def\LongText%
+    {%
+      The L3 programming layer requires the e-TeX primitives and the
+      \LineBreak 'pdfTeX utilities' as described in the README file.
+      \LineBreak
+      These are available in the engines\LineBreak
+      - pdfTeX v1.40.20\LineBreak
+      - XeTeX v0.999991\LineBreak
+      - LuaTeX v1.10\LineBreak
+      - e-(u)pTeX v3.8.2\LineBreak
+      - Prote (2021)\LineBreak
+      or later.\LineBreak
+      \LineBreak
+    }%
+  \ifnum0%
+    \expandafter\ifx\csname luatexversion\endcsname\relax
+      \expandafter\ifx\csname expanded\endcsname\relax\else 1\fi
+    \else
+      \ifnum\luatexversion<110 \else 1\fi
+    \fi
+    =0 %
+      \newlinechar`\^^J %
+      \def\LineBreak{\noexpand\MessageBreak}%
+      \expandafter\ifx\csname PackageError\endcsname\relax
+        \def\LineBreak{^^J}%
+        \begingroup
+          \lccode`\~=`\ \lccode`\}=`\ %
+          \lccode`\T=`\T\lccode`\H=`\H%
+          \catcode`\ =11 %
+\lowercase{\endgroup\def\PackageError#1#2#3{%
+\begingroup\errorcontextlines-1\immediate\write0{}\errhelp{#3}\def%
+\                                                   {#1 Error: #2.^^J^^J
+Type  H <return>  for immediate help}\def~{\errmessage{%
+\                                                   }}~\endgroup}}%
+      \fi
+      \edef\next
+        {%
+          \noexpand\PackageError{expl3}{\ShortText}
+            {\LongText Loading of expl3 will abort!}%
+          \endgroup
+          \noexpand\endinput
+        }%
+  \fi
+\next
+%    \end{macrocode}
+%
+% \subsection{\LaTeX3代码环境}  
+%
+% \begin{macro}{\ExplSyntaxOff}
+% 在更改任何类别码之前，包模式下需在加载之前保当前情况。
+% 另外注意，此处的设置意味着，一旦应用了\cs{ExplSyntaxOff}，
+% 它将成为一个“无操作”命令，直到使用\cs{ExplSyntaxOn}。
+%    \begin{macrocode}
+\protected\edef\ExplSyntaxOff
+  {%
+    \protected\def\noexpand\ExplSyntaxOff{}%
+    \catcode   9 = \the\catcode   9\relax
+    \catcode  32 = \the\catcode  32\relax
+    \catcode  34 = \the\catcode  34\relax
+    \catcode  58 = \the\catcode  58\relax
+    \catcode  94 = \the\catcode  94\relax
+    \catcode  95 = \the\catcode  95\relax
+    \catcode 124 = \the\catcode 124\relax
+    \catcode 126 = \the\catcode 126\relax
+    \endlinechar = \the\endlinechar\relax
+    \chardef\csname\detokenize{l_@@_expl_bool}\endcsname = 0\relax
+  }%
+%    \end{macrocode}
+% \end{macro}
+%
+% 代码环境现在已经设置好了。
+%    \begin{macrocode}
+\catcode 9   = 9\relax
+\catcode 32  = 9\relax
+\catcode 34  = 12\relax
+\catcode 58  = 11\relax
+\catcode 94  = 7\relax
+\catcode 95  = 11\relax
+\catcode 124 = 12\relax
+\catcode 126 = 10\relax
+\endlinechar = 32\relax
+%    \end{macrocode}
+%
+% \begin{variable}{\l_@@_expl_bool}
+%   代码语法的状态:目前是开启的。
+%    \begin{macrocode}
+\chardef\l_@@_expl_bool = 1\relax
+%    \end{macrocode}
+%\end{variable}
+%
+% \begin{macro}{\ExplSyntaxOn}
+% 这里的想法是，多次调用\cs{ExplSyntaxOn}不会弄乱类别码，多次调用
+% \cs{ExplSyntaxOff}也不会浪费时间。另外注意，使用\cs{ExplSyntaxOn}
+% 会改变\cs{ExplSyntaxOff}的定义，因此在包模式下，该函数应在加载过程结束后使用。
+%    \begin{macrocode}
+\protected \def \ExplSyntaxOn
+  {
+    \bool_if:NF \l_@@_expl_bool
+      {
+        \cs_set_protected:Npe \ExplSyntaxOff
+          {
+            \char_set_catcode:nn { 9 }   { \char_value_catcode:n { 9 } }
+            \char_set_catcode:nn { 32 }  { \char_value_catcode:n { 32 } }
+            \char_set_catcode:nn { 34 }  { \char_value_catcode:n { 34 } }
+            \char_set_catcode:nn { 58 }  { \char_value_catcode:n { 58 } }
+            \char_set_catcode:nn { 94 }  { \char_value_catcode:n { 94 } }
+            \char_set_catcode:nn { 95 }  { \char_value_catcode:n { 95 } }
+            \char_set_catcode:nn { 124 } { \char_value_catcode:n { 124 } }
+            \char_set_catcode:nn { 126 } { \char_value_catcode:n { 126 } }
+            \tex_endlinechar:D =
+              \tex_the:D \tex_endlinechar:D \scan_stop:
+            \bool_set_false:N \l_@@_expl_bool
+            \cs_set_protected:Npn \ExplSyntaxOff { }
+          }
+      }
+    \char_set_catcode_ignore:n           { 9 }   % tab
+    \char_set_catcode_ignore:n           { 32 }  % space
+    \char_set_catcode_other:n            { 34 }  % double quote
+    \char_set_catcode_letter:n           { 58 }  % colon
+    \char_set_catcode_math_superscript:n { 94 }  % circumflex
+    \char_set_catcode_letter:n           { 95 }  % underscore
+    \char_set_catcode_other:n            { 124 } % pipe
+    \char_set_catcode_space:n            { 126 } % tilde
+    \tex_endlinechar:D = 32 \scan_stop:
+    \bool_set_true:N \l_@@_expl_bool
+  }
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \PrintIndex

@@ -1,0 +1,30 @@
+\usepackage[heading]{ctex}
+
+\ctexset{
+  indexname     = 代码索引,
+  appendix/name = {附录},
+  part = {
+    break = \clearpage,
+    number = \arabic{part},
+    format = \huge\bfseries,
+    numberformat = \color{blue}\zihao{1}\emph,
+    nameformat = \hfill,
+    aftername = \par\medskip\nointerlineskip\rule{\linewidth}{2bp}\par,
+    titleformat = \vspace{-0.5em}\raggedright,
+  },
+}
+
+% 章节更换
+\let\chapter\section
+\let\section\subsection
+\let\subsection\subsubsection
+
+
+\def\TitleToSection{% 用\maketitle生成节标题
+  \scantokens{
+    \makeatletter
+    \def\maketitle{\chapter{\@title}}
+    \let\thanks\@gobble% 删除\thanks所接收的参数
+    \makeatother
+  }
+}

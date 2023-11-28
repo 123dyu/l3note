@@ -1,0 +1,59 @@
+\usepackage{cprotect}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\tcbuselibrary{listings,breakable}
+
+\lstdefinestyle{base}{
+  gobble = 2,% 空两格再排版
+  % escapechar = *,% *所包含的内容会按LaTeX格式排版
+  escapeinside = {(*}{*)},
+  columns = fullflexible,% 设置字符列为非等宽
+  basicstyle = \small\ttfamily,% 整体格式设置
+  keywordstyle = \bfseries\color{blue!60!black},% 关键字格式
+  commentstyle = \itshape,
+  backgroundcolor = \color{gray!6},% 背景颜色
+  breaklines = true,% 自动换行
+  frameround = ttff,% 边框四角弧度，t则弧
+  frame = leftline,
+  framerule = 1.6pt,% 边框线宽度
+  framesep = 0pt,% 边距
+  xleftmargin=1.5em,
+  framexleftmargin = 1em
+}
+
+\lstdefinestyle{shell}{
+  style = base,
+  rulecolor = \color{red!70!black},
+  language = bash,
+  alsoletter = {-}
+}
+
+\lstdefinestyle{latex}{
+  style = base,
+  language = [LaTeX]TeX,
+  alsoletter = {*, -}
+}
+
+% shell和LaTeX代码环境的排版
+\lstnewenvironment{shell}[1][]{
+    \lstset{style=shell, #1}
+}{}
+
+\lstnewenvironment{latexsyntax}[1][]{
+    \lstset{style=latex, rulecolor=\color{cyan}, #1}
+}{}
+
+\lstnewenvironment{latexexample}[1][]{
+    \lstset{style=latex, rulecolor=\color{teal}, #1}
+}{}
+
+
+% 代码盒子
+\newtcblisting{tcblatexexample}{
+  colback = black!1!white,colframe = blue!60!black,breakable,
+  listing options = {
+    breaklines = true,
+    basicstyle = \small\ttfamily,%整体格式设置
+    columns = fullflexible,%设置字符列为非等宽
+  }
+}
